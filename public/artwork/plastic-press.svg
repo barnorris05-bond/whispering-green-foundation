@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="pp-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2ebdf"/>
+      <stop offset="1" stop-color="#f3f0e0"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="360" fill="url(#pp-bg)"/>
+  <rect x="60" y="60" width="360" height="240" rx="16" fill="#edf2e8" stroke="#c4d2bf" stroke-width="2"/>
+  <g stroke="#3d7a4c" stroke-width="2.6" stroke-linecap="round">
+    <rect x="120" y="150" width="110" height="86" rx="8" fill="#b6d48a"/>
+    <rect x="250" y="150" width="110" height="86" rx="8" fill="#a5cb74"/>
+    <path d="M120 176h110M250 176h110"/>
+    <path d="M150 150v86M310 150v86" opacity="0.55"/>
+  </g>
+  <path d="M175 118c10-16 28-16 38 0" stroke="#4a8350" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M305 118c10-16 28-16 38 0" stroke="#4a8350" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <text x="240" y="272" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#5a6b58">Bales ready for the recycler</text>
+</svg>

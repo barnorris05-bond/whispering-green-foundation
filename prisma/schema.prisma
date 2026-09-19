@@ -1,0 +1,306 @@
+// Whispering Green Foundation — database schema (SQLite for localhost MVP)
+// Conventions: camelCase in code, @@map to snake_case tables, created/updated timestamps everywhere.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------- users & auth
+
+model User {
+  id                 String   @id @default(cuid())
+  name               String
+  email              String   @unique
+  phone              String?
+  passwordHash       String
+  role               String   @default("staff") // founder | staff
+  isActive           Boolean  @default(true)
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  sessions               Session[]
+  volunteerRegistrations VolunteerRegistration[] @relation("VolunteerUser")
+  requests               CollectionRequest[]     @relation("ResidentRequests")
+  requestHistory         RequestStatusHistory[]  @relation("StatusHistoryActor")
+  recordedCollections    CollectionRecord[]      @relation("RecordedByUser")
+  articles               Content[]               @relation("ContentAuthor")
+  media                  Media[]                 @relation("MediaUploader")
+  eventsCreated          Event[]                 @relation("EventCreator")
+  auditLogs              AuditLog[]              @relation("AuditActor")
+
+  @@index([role])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ------------------------------------------------------- collection requests
+
+model CollectionRequest {
+  id            String  @id @default(cuid())
+  referenceCode String  @unique @map("reference_code")
+  userId        String? // optional resident profile association
+  user          User?   @relation("ResidentRequests", fields: [userId], references: [id], onDelete: SetNull)
+
+  name            String
+  email           String?
+  phone           String?
+  category        String
+  description     String
+  quantity        Float? // resident's own estimate
+  unit            String    @default("kg") // kg | bags | other
+  locality        String
+  address         String? // PRIVATE — never shown publicly
+  preferredDate   DateTime? @map("preferred_date")
+  photoPath       String?   @map("photo_path")
+  status          String    @default("submitted") // submitted | under_review | approved | scheduled | in_progress | completed | rejected | cancelled
+  scheduledDate   DateTime? @map("scheduled_date")
+  assignedEventId String?   @map("assigned_event_id")
+  event           Event?    @relation(fields: [assignedEventId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  history RequestStatusHistory[]
+  records CollectionRecord[]
+
+  @@index([status])
+  @@index([locality])
+  @@index([category])
+  @@index([createdAt])
+  @@map("collection_requests")
+}
+
+model RequestStatusHistory {
+  id        String            @id @default(cuid())
+  requestId String
+  request   CollectionRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  oldStatus String?           @map("old_status")
+  newStatus String            @map("new_status")
+  changedBy String?           @map("changed_by")
+  actor     User?             @relation("StatusHistoryActor", fields: [changedBy], references: [id], onDelete: SetNull)
+  note      String?
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  @@index([requestId, createdAt])
+  @@map("request_status_history")
+}
+
+// ------------------------------------------------------------- collection records
+
+model CollectionRecord {
+  id                 String             @id @default(cuid())
+  collectionDate     DateTime           @map("collection_date")
+  locality           String
+  category           String
+  quantity           Float // numeric quantity, never text
+  unit               String             @default("kg")
+  measurementType    String             @default("measured") @map("measurement_type") // measured | estimated
+  verificationStatus String             @default("draft") @map("verification_status") // draft | verified | rejected
+  notes              String?
+  recordedById       String?            @map("recorded_by")
+  recordedBy         User?              @relation("RecordedByUser", fields: [recordedById], references: [id], onDelete: SetNull)
+  eventId            String?            @map("event_id")
+  event              Event?             @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  projectId          String?            @map("project_id")
+  project            Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  requestId          String?            @map("request_id")
+  request            CollectionRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  photoPath          String?            @map("photo_path")
+  source             String             @default("field") // field | logbook
+  isLogbookSeed      Boolean            @default(false) @map("is_logbook_seed")
+  needsVerification  Boolean            @default(false) @map("needs_verification")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([verificationStatus])
+  @@index([collectionDate])
+  @@index([category])
+  @@index([locality])
+  @@map("collection_records")
+}
+
+// ---------------------------------------------------------------- events
+
+model Event {
+  id                   String    @id @default(cuid())
+  title                String
+  slug                 String    @unique
+  description          String
+  eventDate            DateTime  @map("event_date")
+  startTime            String?   @map("start_time") // "HH:MM"
+  endTime              String?   @map("end_time")
+  locality             String
+  status               String    @default("draft") // draft | published | completed | cancelled
+  registrationDeadline DateTime? @map("registration_deadline")
+  capacity             Int?
+  coverMediaPath       String?   @map("cover_media_path")
+  createdById          String?   @map("created_by")
+  createdBy            User?     @relation("EventCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  registrations VolunteerRegistration[]
+  requests      CollectionRequest[]
+  records       CollectionRecord[]
+  media         Media[]
+
+  @@index([eventDate])
+  @@index([status])
+  @@map("events")
+}
+
+model VolunteerRegistration {
+  id         String   @id @default(cuid())
+  eventId    String
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId     String? // optional authenticated association
+  user       User?    @relation("VolunteerUser", fields: [userId], references: [id], onDelete: SetNull)
+  name       String
+  email      String
+  phone      String?
+  status     String   @default("confirmed") // confirmed | waitlist | cancelled
+  attendance String? // present | absent | null
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([eventId, email])
+  @@index([eventId])
+  @@map("volunteer_registrations")
+}
+
+// ---------------------------------------------------------------- projects
+
+model Project {
+  id             String    @id @default(cuid())
+  title          String
+  slug           String    @unique
+  category       String    @default("waste") // waste | education | cleanup | other
+  description    String
+  locality       String
+  startDate      DateTime? @map("start_date")
+  endDate        DateTime? @map("end_date")
+  status         String    @default("draft") // draft | active | completed | archived
+  visibility     String    @default("draft") // draft | published
+  coverMediaPath String?   @map("cover_media_path")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  records CollectionRecord[]
+  media   Media[]
+
+  @@index([status])
+  @@index([visibility])
+  @@map("projects")
+}
+
+// ---------------------------------------------------------------- content (articles)
+
+model Content {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  category    String // waste-segregation | plastic | recycling | disposal | community
+  excerpt     String?
+  body        String
+  status      String    @default("draft") // draft | published | archived
+  readMinutes Int       @default(3) @map("read_minutes")
+  authorId    String?   @map("author_id")
+  author      User?     @relation("ContentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, publishedAt])
+  @@index([category])
+  @@map("contents")
+}
+
+// ---------------------------------------------------------------- media / gallery
+
+model Media {
+  id           String   @id @default(cuid())
+  storagePath  String   @unique @map("storage_path")
+  caption      String?
+  altText      String?  @map("alt_text")
+  attribution  String?
+  consentGiven Boolean  @default(false) @map("consent_given")
+  eventId      String?  @map("event_id")
+  event        Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  projectId    String?  @map("project_id")
+  project      Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  visibility   String   @default("approved") // approved | pending | private
+  uploadedById String?  @map("uploaded_by")
+  uploadedBy   User?    @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([visibility])
+  @@map("media")
+}
+
+// ---------------------------------------------------------------- contact
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  subject   String
+  message   String
+  status    String   @default("new") // new | read | archived
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([status])
+  @@map("contact_messages")
+}
+
+// ---------------------------------------------------------------- audit & settings
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?  @map("actor_id")
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  metadata   String? // JSON string, safe metadata only
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model FoundationSettings {
+  id              Int      @id @default(1)
+  displayName     String   @default("Whispering Green Foundation") @map("display_name")
+  tagline         String   @default("Community-led waste collection and awareness in Vasai-West") @map("tagline")
+  contactEmail    String?  @map("contact_email")
+  contactPhone    String?  @map("contact_phone")
+  publicLocation  String?  @map("public_location")
+  socialFacebook  String?  @map("social_facebook")
+  socialInstagram String?  @map("social_instagram")
+  footerNote      String?  @map("footer_note")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("foundation_settings")
+}

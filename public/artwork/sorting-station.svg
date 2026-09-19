@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ss-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e3ecdc"/>
+      <stop offset="1" stop-color="#f4f1e2"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="360" fill="url(#ss-bg)"/>
+  <g stroke="#2c5332" stroke-width="2.6" fill="#fff" stroke-linecap="round">
+    <rect x="84" y="150" width="72" height="96" rx="10"/>
+    <rect x="204" y="150" width="72" height="96" rx="10"/>
+    <rect x="324" y="150" width="72" height="96" rx="10"/>
+  </g>
+  <rect x="96" y="138" width="48" height="18" rx="6" fill="#67b13f"/>
+  <rect x="216" y="138" width="48" height="18" rx="6" fill="#4a8a7b"/>
+  <rect x="336" y="138" width="48" height="18" rx="6" fill="#c9a227"/>
+  <path d="M96 176c14 8 34 8 48 0M216 176c14 8 34 8 48 0M336 176c14 8 34 8 48 0" stroke="#c9d6c6" stroke-width="2" fill="none"/>
+  <path d="M120 186v44M240 186v44M360 186v44" stroke="#c9d6c6" stroke-width="2"/>
+  <path d="M150 120c8-14 22-14 30 0M190 128c6-10 16-10 22 0" stroke="#7fa276" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <text x="120" y="286" text-anchor="middle" font-size="11" fill="#5a6b58" font-family="Georgia, serif">DRY</text>
+  <text x="240" y="286" text-anchor="middle" font-size="11" fill="#5a6b58" font-family="Georgia, serif">WET</text>
+  <text x="360" y="286" text-anchor="middle" font-size="11" fill="#5a6b58" font-family="Georgia, serif">E-WASTE</text>
+</svg>
