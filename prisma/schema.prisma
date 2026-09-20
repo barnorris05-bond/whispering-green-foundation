@@ -1,4 +1,4 @@
-// Whispering Green Foundation — database schema (SQLite for localhost MVP)
+// Whispering Green Foundation — database schema (PostgreSQL; works with Neon/Supabase/Vercel Postgres)
 // Conventions: camelCase in code, @@map to snake_case tables, created/updated timestamps everywhere.
 
 generator client {
@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")   // pooled connection (runtime queries)
+  directUrl = env("DIRECT_URL")     // direct, non-pooled connection (migrations)
 }
 
 // ---------------------------------------------------------------- users & auth

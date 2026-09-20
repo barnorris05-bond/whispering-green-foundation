@@ -4,12 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "prisma generate && prisma migrate deploy && next build --turbopack",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "db:setup": "prisma migrate deploy && prisma generate",
     "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "node -e \"require('fs').rmSync('prisma/dev.db',{force:true})\" && prisma migrate deploy && prisma generate && npm run db:seed"
+    "db:reset": "prisma migrate reset --force"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

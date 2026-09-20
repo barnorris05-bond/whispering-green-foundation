@@ -1,6 +1,9 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateTable
 CREATE TABLE "users" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "phone" TEXT,
@@ -8,23 +11,26 @@ CREATE TABLE "users" (
     "role" TEXT NOT NULL DEFAULT 'staff',
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "mustChangePassword" BOOLEAN NOT NULL DEFAULT false,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "sessions" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "tokenHash" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "expires_at" DATETIME NOT NULL,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "expires_at" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "collection_requests" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "reference_code" TEXT NOT NULL,
     "userId" TEXT,
     "name" TEXT NOT NULL,
@@ -32,41 +38,41 @@ CREATE TABLE "collection_requests" (
     "phone" TEXT,
     "category" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "quantity" REAL,
+    "quantity" DOUBLE PRECISION,
     "unit" TEXT NOT NULL DEFAULT 'kg',
     "locality" TEXT NOT NULL,
     "address" TEXT,
-    "preferred_date" DATETIME,
+    "preferred_date" TIMESTAMP(3),
     "photo_path" TEXT,
     "status" TEXT NOT NULL DEFAULT 'submitted',
-    "scheduled_date" DATETIME,
+    "scheduled_date" TIMESTAMP(3),
     "assigned_event_id" TEXT,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL,
-    CONSTRAINT "collection_requests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "collection_requests_assigned_event_id_fkey" FOREIGN KEY ("assigned_event_id") REFERENCES "events" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "collection_requests_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "request_status_history" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "requestId" TEXT NOT NULL,
     "old_status" TEXT,
     "new_status" TEXT NOT NULL,
     "changed_by" TEXT,
     "note" TEXT,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "request_status_history_requestId_fkey" FOREIGN KEY ("requestId") REFERENCES "collection_requests" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "request_status_history_changed_by_fkey" FOREIGN KEY ("changed_by") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "request_status_history_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "collection_records" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "collection_date" DATETIME NOT NULL,
+    "id" TEXT NOT NULL,
+    "collection_date" TIMESTAMP(3) NOT NULL,
     "locality" TEXT NOT NULL,
     "category" TEXT NOT NULL,
-    "quantity" REAL NOT NULL,
+    "quantity" DOUBLE PRECISION NOT NULL,
     "unit" TEXT NOT NULL DEFAULT 'kg',
     "measurement_type" TEXT NOT NULL DEFAULT 'measured',
     "verification_status" TEXT NOT NULL DEFAULT 'draft',
@@ -79,37 +85,36 @@ CREATE TABLE "collection_records" (
     "source" TEXT NOT NULL DEFAULT 'field',
     "is_logbook_seed" BOOLEAN NOT NULL DEFAULT false,
     "needs_verification" BOOLEAN NOT NULL DEFAULT false,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL,
-    CONSTRAINT "collection_records_recorded_by_fkey" FOREIGN KEY ("recorded_by") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "collection_records_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "collection_records_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "collection_records_request_id_fkey" FOREIGN KEY ("request_id") REFERENCES "collection_requests" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "collection_records_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "events" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "event_date" DATETIME NOT NULL,
+    "event_date" TIMESTAMP(3) NOT NULL,
     "start_time" TEXT,
     "end_time" TEXT,
     "locality" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'draft',
-    "registration_deadline" DATETIME,
+    "registration_deadline" TIMESTAMP(3),
     "capacity" INTEGER,
     "cover_media_path" TEXT,
     "created_by" TEXT,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL,
-    CONSTRAINT "events_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "events_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "volunteer_registrations" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "eventId" TEXT NOT NULL,
     "userId" TEXT,
     "name" TEXT NOT NULL,
@@ -117,31 +122,33 @@ CREATE TABLE "volunteer_registrations" (
     "phone" TEXT,
     "status" TEXT NOT NULL DEFAULT 'confirmed',
     "attendance" TEXT,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "volunteer_registrations_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "events" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "volunteer_registrations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "volunteer_registrations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "projects" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "category" TEXT NOT NULL DEFAULT 'waste',
     "description" TEXT NOT NULL,
     "locality" TEXT NOT NULL,
-    "start_date" DATETIME,
-    "end_date" DATETIME,
+    "start_date" TIMESTAMP(3),
+    "end_date" TIMESTAMP(3),
     "status" TEXT NOT NULL DEFAULT 'draft',
     "visibility" TEXT NOT NULL DEFAULT 'draft',
     "cover_media_path" TEXT,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "projects_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "contents" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "category" TEXT NOT NULL,
@@ -150,15 +157,16 @@ CREATE TABLE "contents" (
     "status" TEXT NOT NULL DEFAULT 'draft',
     "read_minutes" INTEGER NOT NULL DEFAULT 3,
     "author_id" TEXT,
-    "published_at" DATETIME,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL,
-    CONSTRAINT "contents_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "published_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "contents_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "media" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "storage_path" TEXT NOT NULL,
     "caption" TEXT,
     "alt_text" TEXT,
@@ -168,40 +176,42 @@ CREATE TABLE "media" (
     "project_id" TEXT,
     "visibility" TEXT NOT NULL DEFAULT 'approved',
     "uploaded_by" TEXT,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL,
-    CONSTRAINT "media_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "media_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "media_uploaded_by_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "media_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "contact_messages" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT,
     "phone" TEXT,
     "subject" TEXT NOT NULL,
     "message" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'new',
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "contact_messages_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "audit_logs" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "actor_id" TEXT,
     "action" TEXT NOT NULL,
     "entity_type" TEXT NOT NULL,
     "entity_id" TEXT,
     "metadata" TEXT,
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "audit_logs_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "foundation_settings" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT DEFAULT 1,
+    "id" INTEGER NOT NULL DEFAULT 1,
     "display_name" TEXT NOT NULL DEFAULT 'Whispering Green Foundation',
     "tagline" TEXT NOT NULL DEFAULT 'Community-led waste collection and awareness in Vasai-West',
     "contact_email" TEXT,
@@ -210,7 +220,9 @@ CREATE TABLE "foundation_settings" (
     "social_facebook" TEXT,
     "social_instagram" TEXT,
     "footer_note" TEXT,
-    "updated_at" DATETIME NOT NULL
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "foundation_settings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -305,3 +317,55 @@ CREATE INDEX "audit_logs_entity_type_entity_id_idx" ON "audit_logs"("entity_type
 
 -- CreateIndex
 CREATE INDEX "audit_logs_created_at_idx" ON "audit_logs"("created_at");
+
+-- AddForeignKey
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "collection_requests" ADD CONSTRAINT "collection_requests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "collection_requests" ADD CONSTRAINT "collection_requests_assigned_event_id_fkey" FOREIGN KEY ("assigned_event_id") REFERENCES "events"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "request_status_history" ADD CONSTRAINT "request_status_history_requestId_fkey" FOREIGN KEY ("requestId") REFERENCES "collection_requests"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "request_status_history" ADD CONSTRAINT "request_status_history_changed_by_fkey" FOREIGN KEY ("changed_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "collection_records" ADD CONSTRAINT "collection_records_recorded_by_fkey" FOREIGN KEY ("recorded_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "collection_records" ADD CONSTRAINT "collection_records_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "collection_records" ADD CONSTRAINT "collection_records_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "collection_records" ADD CONSTRAINT "collection_records_request_id_fkey" FOREIGN KEY ("request_id") REFERENCES "collection_requests"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "events" ADD CONSTRAINT "events_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "volunteer_registrations" ADD CONSTRAINT "volunteer_registrations_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "events"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "volunteer_registrations" ADD CONSTRAINT "volunteer_registrations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "contents" ADD CONSTRAINT "contents_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "media" ADD CONSTRAINT "media_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "media" ADD CONSTRAINT "media_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "media" ADD CONSTRAINT "media_uploaded_by_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+

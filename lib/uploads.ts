@@ -18,6 +18,16 @@ export interface SaveResult {
 
 /** Validate and store an uploaded image locally. Returns relative path for DB. */
 export async function saveUpload(file: File, prefix: string): Promise<SaveResult> {
+  // Vercel's serverless filesystem is read-only (except ephemeral /tmp).
+  // Fail with a clear, friendly message instead of a runtime 500.
+  if (process.env.VERCEL === "1") {
+    return {
+      ok: false,
+      error:
+        "Photo uploads are disabled in the hosted demo (serverless filesystem is read-only). Submit without a photo, or run the app locally to upload.",
+    };
+  }
+
   if (!file || typeof file === "string") return { ok: false, error: "No file provided." };
   if (file.size === 0) return { ok: false, error: "Empty file." };
   if (file.size > MAX_BYTES) return { ok: false, error: "Image is larger than 5 MB." };

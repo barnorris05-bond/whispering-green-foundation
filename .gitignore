@@ -4,3 +4,6 @@ dev.db
 dev.db-journal
 uploads/
 .env
+
+.freebuff/
+*.tsbuildinfo

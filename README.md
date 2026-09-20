@@ -16,13 +16,16 @@ secure request tracking + protected staff dashboard with verified-impact reporti
 # 1. Install dependencies
 npm install
 
-# 2. Create the SQLite database (migrations) + Prisma client
+# 2. Create .env with your Postgres connection strings (see "Environment variables" below)
+cp .env.example .env
+
+# 3. Create the schema (migrations) + Prisma client against your Postgres
 npm run db:setup
 
-# 3. Seed demo data (demo accounts, sample content, UNVERIFIED logbook records)
+# 4. Seed demo data (demo accounts, sample content, UNVERIFIED logbook records)
 npm run db:seed
 
-# 4. Run the dev server
+# 5. Run the dev server
 npm run dev
 ```
 
@@ -43,18 +46,19 @@ Login page: `/login` → redirects to `/admin`. Both seeded accounts carry a
 ## Prerequisites
 
 - Node.js 18.18+ (built & tested on Node 24)
-- No database server needed — SQLite file at `prisma/dev.db`
+- A PostgreSQL database — the easiest is a free **Neon** database (neon.tech). The same
+  database serves local development and the Vercel deployment (see *Deploy to Vercel*).
 
 ## Scripts
 
 | Command             | What it does                                                        |
 | ------------------- | ------------------------------------------------------------------- |
 | `npm run dev`       | Start dev server (Turbopack)                                        |
-| `npm run build`     | Production build check                                              |
+| `npm run build`     | Prisma generate + migrate deploy + production build (same as Vercel) |
 | `npm start`         | Serve the production build                                          |
 | `npm run db:setup`  | Apply migrations + generate Prisma client                           |
 | `npm run db:seed`   | Seed demo data (idempotent)                                         |
-| `npm run db:reset`  | Delete DB, re-apply migrations, reseed                              |
+| `npm run db:reset`  | **Drops all data** — re-apply migrations + reseed                     |
 | `npm run lint`      | ESLint                                                              |
 
 ## Environment variables
@@ -62,12 +66,14 @@ Login page: `/login` → redirects to `/admin`. Both seeded accounts carry a
 Copy `.env.example` → `.env`:
 
 ```
-DATABASE_URL="file:./dev.db"        # SQLite location (relative to /prisma)
-SESSION_SECRET="any-long-random-string"
-UPLOAD_DIR="uploads"                # local uploads folder
+DATABASE_URL="postgresql://…-pooler…neon.tech/neondb?sslmode=require"   # pooled — runtime
+DIRECT_URL="postgresql://…neon.tech/neondb?sslmode=require"             # direct — migrations
+UPLOAD_DIR="uploads"                                                   # local uploads folder
 ```
 
-No third-party services or API keys are required.
+`DATABASE_URL` is the **pooled** connection string (use it for the app), `DIRECT_URL` is
+the **direct, non-pooled** string (use it for migrations — Neon/Supabase poolers do not
+handle DDL safely). No API keys are required.
 
 ---
 
@@ -118,15 +124,56 @@ pipeline is visible immediately; delete it in Admin → Collections if you want 
   admin APIs/actions guarded server-side (not just hidden UI), audit log for sensitive ops.
 - In-memory rate limiting on public forms (documented limitation below).
 
+## Deploy to Vercel (hosted via GitHub)
+
+The deployment model is: **GitHub repo → Vercel builds it → hosted Postgres (Neon)**.
+
+1. **Push the code to GitHub**
+
+   ```bash
+   git add .
+   git commit -m "Prepare for Vercel: PostgreSQL migration + serverless build config"
+   git push origin main
+   ```
+
+2. **Create a free hosted Postgres** — [neon.tech](https://neon.tech), or in Vercel via
+   *Storage → Create database → Neon*, or Supabase. Copy **two** connection strings from
+   the dashboard: the **pooled** one (runtime) and the **direct/non-pooled** one (migrations).
+
+3. **Set up the database once from your machine** (this prepares the exact DB the site uses):
+
+   ```bash
+   # paste both URLs into .env first
+   npm run db:setup    # prisma migrate deploy + generate
+   npm run db:seed     # demo content + demo accounts
+   npm run dev         # local dev now uses the same hosted DB
+   ```
+
+4. **Import the repo into Vercel**: vercel.com → *Add New… → Project* → import
+   `whispering-green-foundation`. The Next.js preset is detected automatically.
+
+5. **Add environment variables** (Project → Settings → Environment Variables):
+   `DATABASE_URL` (pooled string) and `DIRECT_URL` (direct string).
+
+6. **Deploy.** The build runs `prisma generate && prisma migrate deploy && next build`.
+
+7. **Verify the deployment**: open the site, submit a collection request, track it, log
+   in at `/login` — then **change both demo passwords immediately** (Admin → Settings).
+
+Deployed-demo differences: photo uploads are rejected with a clear message (Vercel's
+serverless filesystem is read-only — submit without a photo; the seeded artwork gallery
+still renders); rate limiting is per serverless instance; admin/staff logins use the
+same seeded accounts.
+
 ## Known limitations (localhost MVP)
 
 - **Rate limiting** is in-memory per process — resets on restart, not shared across workers.
 - **Uploads** live in `/uploads` and are served through a DB-checked route; there is no
   virus scanning and no CDN. Images are validated by MIME/extension/size only.
-- **SQLite** is single-writer; fine for a demo, not for concurrent production write load.
+- **Photo uploads are disabled on Vercel** (serverless filesystem is read-only); they work
+  normally when running locally.
 - **No email/SMS** — notifications are toasts and on-screen confirmation codes.
-- **Session secret** in `.env` is demo-only; regenerate before any real use.
-- **Search** uses SQLite `contains` (case-sensitive for non-ASCII; adequate for demo data).
+- **Search** uses `contains` (case-sensitive for non-ASCII; adequate for demo data).
 - **Gallery demo imagery** is a set of six labelled illustration concepts (`public/artwork/*.svg`)
   seeded into the media table as `artwork:<key>` entries — clearly marked as concepts, not photographs.
   Replace them with real, consented event photos via Admin → Gallery for any real presentation.
@@ -135,13 +182,17 @@ pipeline is visible immediately; delete it in Admin → Collections if you want 
 
 ## Backup
 
-Copy `prisma/dev.db` and the `uploads/` folder — that is the entire state.
+- **Database**: a Postgres dump, e.g. `pg_dump "$DIRECT_URL" > backup.sql` (Neon/Supabase
+  dashboards also offer backups/point-in-time restore on paid tiers).
+- **Uploads**: copy the `uploads/` folder (relevant for local runs only).
 
 ## Troubleshooting
 
 | Symptom | Fix |
 | --- | --- |
 | Homepage says “Database not reachable” | Run `npm run db:setup && npm run db:seed`, restart dev server |
+| `migrate deploy` fails with connection timeout | Migrations must use the direct URL — check `DIRECT_URL` is the non-pooled connection string |
+| Vercel build fails on Prisma | Confirm `DATABASE_URL` + `DIRECT_URL` are set in Vercel → Settings → Environment Variables |
 | Login says incorrect credentials | Re-run `npm run db:seed` (accounts are seeded) |
 | Port already in use | `PORT=3100 npm run dev` (or any free port) |
 | Uploaded image 404s | File must exist under `uploads/`; check `UPLOAD_DIR` matches |
