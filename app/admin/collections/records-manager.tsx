@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { upsertCollectionRecord, deleteCollectionRecord } from "@/app/admin/actions";
 import { SubmitButton, useToast, ConfirmDialog } from "@/components/ui";
 import { WASTE_CATEGORIES, CATEGORY_LABELS, MEASUREMENT_TYPES, VERIFICATION_STATUSES, UNITS } from "@/lib/domain";
+import { toDateInput } from "@/lib/format";
 import { X } from "lucide-react";
 
 interface Option { id: string; title: string }
@@ -34,6 +35,7 @@ export function RecordsManager({
   requests,
   events,
   projects,
+  prefillRequestId,
 }: {
   trigger: React.ReactNode;
   mode: "create" | "edit";
@@ -41,6 +43,7 @@ export function RecordsManager({
   requests: Option[];
   events: Option[];
   projects: Option[];
+  prefillRequestId?: string;
 }) {
   const { push } = useToast();
   const [open, setOpen] = useState(false);
@@ -69,7 +72,7 @@ export function RecordsManager({
 
   return (
     <>
-      <span onClick={() => setOpen(true)} className="cursor-pointer inline-flex">{trigger}</span>
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex">{trigger}</button>
 
       {open && (
         <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={mode === "create" ? "Add collection record" : "Edit collection record"}>
@@ -89,7 +92,7 @@ export function RecordsManager({
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label">Collection date *</label>
-                  <input type="date" name="collectionDate" required defaultValue={record?.collectionDate ?? new Date().toISOString().slice(0, 10)} className="input" />
+                  <input type="date" name="collectionDate" required defaultValue={record?.collectionDate ?? toDateInput(new Date())} className="input" />
                 </div>
                 <div>
                   <label className="label">Locality *</label>
@@ -125,7 +128,7 @@ export function RecordsManager({
                 </div>
                 <div>
                   <label className="label">Linked request (optional)</label>
-                  <select name="requestId" defaultValue={record?.requestId ?? ""} className="input">
+                  <select name="requestId" defaultValue={record?.requestId ?? prefillRequestId ?? ""} className="input">
                     <option value="">— none —</option>
                     {requests.map((r) => <option key={r.id} value={r.id}>{r.title || r.id}</option>)}
                   </select>

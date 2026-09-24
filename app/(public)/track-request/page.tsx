@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 export const metadata: Metadata = {
   title: "Track a Request",
   description: "Track your waste collection request using your reference code and contact details.",
+  robots: { index: false, follow: false },
 };
 
 export default async function TrackRequestPage({

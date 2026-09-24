@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { formatIN, formatDate } from "@/lib/format";
 import { CATEGORY_LABELS } from "@/lib/domain";
 import { Reveal, SectionHeading, Badge, EmptyState } from "@/components/ui";
-import { LeafMark } from "@/components/logo";
+import { LogoMark } from "@/components/logo";
 import {
   Recycle, ClipboardList, Truck, PartyPopper, ArrowRight, CalendarDays,
   BookOpen, Users, ShieldCheck, MapPin, Leaf, HandHeart, Info, PackageSearch,
@@ -21,10 +21,9 @@ export const metadata: Metadata = {
 async function getHomeData() {
   try {
     const [verified, events, articles, projects] = await Promise.all([
-      prisma.collectionRecord.aggregate({
+      prisma.collectionRecord.findMany({
         where: { verificationStatus: "verified" },
-        _sum: { quantity: true },
-        _count: true,
+        select: { quantity: true, unit: true },
       }),
       prisma.event.findMany({
         where: { status: "published", eventDate: { gte: new Date() } },
@@ -74,8 +73,10 @@ const STEPS = [
 export default async function HomePage() {
   const { verified, events, articles, projects, ok } = await getHomeData();
 
-  const totalKg = verified?._sum.quantity ?? 0;
-  const hasImpact = (verified?._count ?? 0) > 0;
+  // Only kg records are summed into the public tonnage; non-kg units (bags/other)
+  // still count as verified records but cannot be expressed in kilograms.
+  const totalKg = (verified ?? []).filter((r) => r.unit === "kg").reduce((s, r) => s + r.quantity, 0);
+  const hasImpact = (verified?.length ?? 0) > 0;
 
   return (
     <>
@@ -196,7 +197,7 @@ export default async function HomePage() {
             ) : (
               <dl className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-7">
                 <ImpactStat label="Waste collected (verified)" value={`${formatIN(totalKg)} kg`} />
-                <ImpactStat label="Verified collection records" value={formatIN(verified._count)} />
+                <ImpactStat label="Verified collection records" value={formatIN(verified?.length ?? 0)} />
                 <ImpactStat label="Upcoming published events" value={String(events.length)} />
                 <ImpactStat label="Awareness articles" value={String(articles.length)} />
               </dl>
@@ -340,7 +341,7 @@ export default async function HomePage() {
             <div aria-hidden className="absolute inset-0 opacity-[0.07]">
               <LeafPattern dense />
             </div>
-            <LeafMark className="w-12 h-12 mx-auto text-leaf-300" />
+            <LogoMark className="w-16 h-16 mx-auto rounded-2xl bg-white/95 p-1.5 shadow-soft" />
             <h2 className="font-display text-3xl sm:text-4xl font-semibold mt-5 tracking-tight">
               Volunteer with us in Vasai-West
             </h2>

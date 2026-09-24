@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { trackSchema } from "@/lib/domain";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { PUBLIC_STATUS_LABELS } from "@/lib/domain";
+import { toDateInput } from "@/lib/format";
 
 export async function POST(req: Request) {
   const rl = rateLimit(clientKey(req, "track"), 20, 10 * 60 * 1000);
@@ -54,6 +55,12 @@ export async function POST(req: Request) {
       category: request.category,
       locality: request.locality,
       quantity: request.quantity ? `${request.quantity} ${request.unit}` : null,
+      // Safe to show: date-only, only once the collection is actually scheduled.
+      // Local calendar date — the same one staff picked (never a UTC slice).
+      scheduledDate:
+        (request.status === "scheduled" || request.status === "in_progress") && request.scheduledDate
+          ? toDateInput(request.scheduledDate)
+          : null,
       updates,
     },
   });

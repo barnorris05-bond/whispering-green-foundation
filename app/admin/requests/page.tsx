@@ -37,6 +37,12 @@ export default async function AdminRequestsPage({
 
   const pages = Math.max(1, Math.ceil(total / perPage));
 
+  const paramsString = (q: Record<string, string | number | undefined>) => {
+    const usp = new URLSearchParams();
+    for (const [k, v] of Object.entries(q)) if (v !== undefined && v !== "") usp.set(k, String(v));
+    return usp.toString();
+  };
+
   return (
     <div className="space-y-5">
       <form className="card p-4 flex flex-wrap gap-3 items-end" role="search">
@@ -108,10 +114,10 @@ export default async function AdminRequestsPage({
             <span>{total} request{total === 1 ? "" : "s"} · page {page} of {pages}</span>
             <div className="flex gap-2">
               {page > 1 && (
-                <Link href={{ query: { ...sp, page: page - 1 } } as never} className="btn btn-secondary btn-sm">Previous</Link>
+                <Link href={`/admin/requests?${paramsString({ ...sp, page: page - 1 })}`} className="btn btn-secondary btn-sm">Previous</Link>
               )}
               {page < pages && (
-                <Link href={{ query: { ...sp, page: page + 1 } } as never} className="btn btn-secondary btn-sm">Next</Link>
+                <Link href={`/admin/requests?${paramsString({ ...sp, page: page + 1 })}`} className="btn btn-secondary btn-sm">Next</Link>
               )}
             </div>
           </div>

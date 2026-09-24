@@ -40,7 +40,7 @@ export const STATUS_TRANSITIONS: Record<string, string[]> = {
   submitted: ["under_review", "approved", "scheduled", "rejected", "cancelled"],
   under_review: ["approved", "scheduled", "in_progress", "rejected", "cancelled"],
   approved: ["scheduled", "in_progress", "completed", "rejected", "cancelled"],
-  scheduled: ["in_progress", "completed", "cancelled"],
+  scheduled: ["scheduled", "in_progress", "completed", "cancelled"],
   in_progress: ["completed", "cancelled"],
   completed: [],
   rejected: [],

@@ -77,7 +77,7 @@ export function ProjectsManager({
 
   return (
     <>
-      <span onClick={() => setOpen(true)} className="cursor-pointer inline-flex">{trigger}</span>
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex">{trigger}</button>
 
       {open && (
         <div className="fixed inset-0 z-[85] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Project editor">

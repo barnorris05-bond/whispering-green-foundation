@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { formatIN, formatDateTime, timeAgo } from "@/lib/format";
+import { formatIN, formatDateTime, timeAgo, toDateInput } from "@/lib/format";
 import { STATUS_LABELS } from "@/lib/domain";
 import { Badge, STATUS_TONES } from "@/components/ui";
 import {
@@ -84,7 +84,9 @@ export default async function AdminDashboard() {
       </section>
 
       <section className="grid lg:grid-cols-2 gap-6">
-        <div className="card p-6">
+        {/* min-w-0 lets the chart shrink inside the grid instead of forcing a
+            min-content width that overflows narrow viewports. */}
+        <div className="card p-6 min-w-0">
           <h3 className="font-display text-lg font-semibold text-charcoal mb-1">Verified collections trend</h3>
           <p className="text-xs text-charcoal-soft/80 mb-4">
             Verified records only (kg). Draft/unverified records and raw requests are excluded.
@@ -94,7 +96,7 @@ export default async function AdminDashboard() {
               data={verified
                 .filter((r) => r.unit === "kg")
                 .map((r) => ({
-                  date: r.collectionDate.toISOString().slice(0, 10),
+                  date: toDateInput(r.collectionDate),
                   quantity: r.quantity,
                   estimated: r.measurementType === "estimated",
                 }))}
@@ -106,7 +108,7 @@ export default async function AdminDashboard() {
           )}
         </div>
 
-        <div className="card p-6">
+        <div className="card p-6 min-w-0">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-lg font-semibold text-charcoal">Needs review</h3>
             <Link href="/admin/requests" className="text-xs font-medium text-forest-700 hover:underline">View all</Link>

@@ -22,6 +22,38 @@ export function formatDateTime(value: Date | string | null | undefined): string 
   }).format(d);
 }
 
+/**
+ * Local `YYYY-MM-DD` for <input type="date"> and date-only APIs.
+ *
+ * Dates are stored as local midnight (`new Date(`${s}T00:00:00`)`), so the
+ * calendar date must be read back in local time too. Using
+ * `toISOString().slice(0, 10)` shifts the date by one day in non-UTC zones
+ * (e.g. IST), which made residents and staff see different collection dates.
+ */
+export function toDateInput(value: Date | string | null | undefined): string {
+  if (!value) return "";
+  const d = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Render a date-only string (`YYYY-MM-DD`) without any timezone conversion —
+ * safe on the client where parsing as UTC midnight could roll the date back.
+ */
+export function formatDateOnly(value: string | null | undefined): string {
+  if (!value) return "—";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!m) return formatDate(value);
+  const [, y, mo, day] = m;
+  return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(
+    new Date(Number(y), Number(mo) - 1, Number(day))
+  );
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

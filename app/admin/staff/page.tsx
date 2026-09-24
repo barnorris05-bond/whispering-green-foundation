@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
@@ -9,6 +10,9 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminStaffPage() {
   const me = await getCurrentUser();
+  // Founder-only: staff accounts are never listed to non-founders (the actions
+  // are guarded too, but the directory itself must not be readable by staff).
+  if (!me || me.role !== "founder") redirect("/admin");
   const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" } });
 
   return (

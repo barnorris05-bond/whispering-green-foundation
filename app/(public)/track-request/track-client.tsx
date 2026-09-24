@@ -4,9 +4,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SubmitButton, useToast, Badge } from "@/components/ui";
 import { REQUEST_STATUSES, STATUS_LABELS, PUBLIC_STATUS_LABELS } from "@/lib/domain";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatDateOnly } from "@/lib/format";
 import {
-  Search, CheckCircle2, CircleDashed, ShieldQuestion, PackageSearch, History, Lock,
+  Search, CheckCircle2, CircleDashed, ShieldQuestion, PackageSearch, History, Lock, CalendarCheck,
 } from "lucide-react";
 
 interface TimelineEntry {
@@ -22,6 +22,7 @@ interface TrackResult {
   category: string;
   locality: string;
   quantity: string | null;
+  scheduledDate?: string | null;
   updates: TimelineEntry[];
   completedAt?: string | null;
 }
@@ -125,6 +126,13 @@ export function TrackClient({ initialCode }: { initialCode?: string }) {
                 <div><dt className="text-xs text-charcoal-soft/70">Area</dt><dd className="font-medium mt-0.5">{result.locality}</dd></div>
                 <div><dt className="text-xs text-charcoal-soft/70">Quantity</dt><dd className="font-medium mt-0.5">{result.quantity ?? "—"}</dd></div>
               </dl>
+
+              {result.scheduledDate && (
+                <p className="mt-5 flex items-center gap-2 text-sm font-medium text-forest-800 bg-leaf-100/50 border border-leaf-200 rounded-xl px-4 py-3">
+                  <CalendarCheck className="w-4.5 h-4.5 text-forest-600 shrink-0" />
+                  Collection scheduled for {formatDateOnly(result.scheduledDate)} — please keep the waste accessible.
+                </p>
+              )}
 
               {/* progress flow */}
               {result.status !== "rejected" && result.status !== "cancelled" && (

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Reveal } from "@/components/ui";
 import { LoginForm } from "./login-form";
-import { LeafMark } from "@/components/logo";
+import { Logo } from "@/components/logo";
 import { ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -15,9 +15,8 @@ export default function LoginPage() {
     <div className="min-h-screen grid lg:grid-cols-2 bg-ivory">
       <div className="flex items-center justify-center px-6 py-16">
         <Reveal className="w-full max-w-md">
-          <div className="flex items-center gap-2.5 mb-8">
-            <LeafMark className="w-9 h-9 text-forest-800" />
-            <span className="font-display font-semibold text-forest-900 text-lg">Whispering Green Foundation</span>
+          <div className="mb-8">
+            <Logo />
           </div>
           <h1 className="font-display text-3xl font-semibold text-forest-950 tracking-tight">Staff sign-in</h1>
           <p className="text-sm text-charcoal-soft mt-2.5 mb-8">

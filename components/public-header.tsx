@@ -44,7 +44,7 @@ export function PublicHeader() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          <Logo />
+          <Logo priority />
 
           <nav aria-label="Primary" className="hidden lg:flex items-center gap-0.5">
             {PUBLIC_NAV.map((item) => (

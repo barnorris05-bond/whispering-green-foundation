@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { LeafMark } from "./logo";
+import { LogoOnDark } from "./logo";
 import { Mail, Phone, MapPin, ShieldAlert } from "lucide-react";
 
 export async function PublicFooter() {
@@ -19,12 +19,8 @@ export async function PublicFooter() {
     <footer className="bg-forest-950 text-forest-100 mt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <div className="flex items-center gap-2.5">
-            <LeafMark className="w-9 h-9 text-leaf-300" />
-            <div>
-              <p className="font-display font-semibold text-lg text-white leading-tight">Whispering Green Foundation</p>
-              <p className="text-[0.66rem] tracking-[0.22em] uppercase text-forest-300/80">Placeholder wordmark · concept</p>
-            </div>
+          <div>
+            <LogoOnDark />
           </div>
           <p className="text-sm text-forest-200/85 mt-4 max-w-sm leading-relaxed">
             {settings?.footerNote ??

@@ -57,16 +57,18 @@ export function LoginForm() {
         </div>
       </div>
       <SubmitButton className="w-full" pendingLabel="Signing in…">Sign in</SubmitButton>
-      <div className="rounded-xl bg-parchment border border-clay px-4 py-3.5 text-xs leading-relaxed">
-        <p className="font-semibold text-charcoal">Demo credentials</p>
-        <p className="text-charcoal-soft mt-1">
-          Founder: <code className="bg-white px-1.5 py-0.5 rounded border border-clay">founder@wgf.demo</code> / <code className="bg-white px-1.5 py-0.5 rounded border border-clay">Founder@123</code>
-        </p>
-        <p className="text-charcoal-soft mt-1">
-          Staff: <code className="bg-white px-1.5 py-0.5 rounded border border-clay">staff@wgf.demo</code> / <code className="bg-white px-1.5 py-0.5 rounded border border-clay">Staff@123</code>
-        </p>
-        <p className="text-charcoal-soft/70 mt-1.5">Local demo only — change these before any real use.</p>
-      </div>
+      {process.env.NODE_ENV !== "production" && (
+        <div className="rounded-xl bg-parchment border border-clay px-4 py-3.5 text-xs leading-relaxed">
+          <p className="font-semibold text-charcoal">Demo credentials (local dev only)</p>
+          <p className="text-charcoal-soft mt-1">
+            Founder: <code className="bg-white px-1.5 py-0.5 rounded border border-clay">founder@wgf.demo</code> / <code className="bg-white px-1.5 py-0.5 rounded border border-clay">Founder@123</code>
+          </p>
+          <p className="text-charcoal-soft mt-1">
+            Staff: <code className="bg-white px-1.5 py-0.5 rounded border border-clay">staff@wgf.demo</code> / <code className="bg-white px-1.5 py-0.5 rounded border border-clay">Staff@123</code>
+          </p>
+          <p className="text-charcoal-soft/70 mt-1.5">Shown in development builds only — never in production.</p>
+        </div>
+      )}
     </form>
   );
 }

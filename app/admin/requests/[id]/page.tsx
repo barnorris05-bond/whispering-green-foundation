@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, toDateInput } from "@/lib/format";
 import { CATEGORY_LABELS, REQUEST_STATUSES, STATUS_LABELS, STATUS_TRANSITIONS } from "@/lib/domain";
 import { Badge, STATUS_TONES, Breadcrumbs } from "@/components/ui";
 import { RequestStatusPanel } from "./status-panel";
@@ -117,7 +117,7 @@ export default async function AdminRequestDetail({ params }: { params: Promise<{
             requestId={request.id}
             currentStatus={request.status}
             nextStatuses={nextStatuses}
-            scheduledDate={request.scheduledDate ? request.scheduledDate.toISOString().slice(0, 10) : ""}
+            scheduledDate={toDateInput(request.scheduledDate)}
             assignedEventId={request.assignedEventId ?? ""}
             events={events.map((e) => ({ id: e.id, title: e.title, date: formatDate(e.eventDate) }))}
           />
@@ -129,8 +129,11 @@ export default async function AdminRequestDetail({ params }: { params: Promise<{
                 This request is completed but no collection record exists yet. Add one from Collection records with the
                 verified quantity — it will count towards public impact only after verification.
               </p>
-              <Link href="/admin/collections?requestId=" className="btn btn-primary btn-sm mt-3">
-                Go to collection records <ArrowRight className="w-3.5 h-3.5" />
+              <Link
+                href={`/admin/collections?requestId=${request.id}`}
+                className="btn btn-primary btn-sm mt-3"
+              >
+                Add collection record <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           )}

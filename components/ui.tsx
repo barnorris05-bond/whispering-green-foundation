@@ -95,10 +95,10 @@ export function useToast() {
 
 /* ----------------------------------------------------------- submit button */
 
-export function SubmitButton({ children, className, pendingLabel }: { children: ReactNode; className?: string; pendingLabel?: string }) {
+export function SubmitButton({ children, className, pendingLabel, onClick }: { children: ReactNode; className?: string; pendingLabel?: string; onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className={cn("btn btn-primary", className)} aria-busy={pending}>
+    <button type="submit" disabled={pending} onClick={onClick} className={cn("btn btn-primary", className)} aria-busy={pending}>
       {pending ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin" /> {pendingLabel ?? "Working…"}

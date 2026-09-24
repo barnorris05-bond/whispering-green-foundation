@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LeafMark } from "./logo";
+import { LogoImage } from "./logo";
 import { Menu, X, LogOut, ChevronDown, KeyRound, ExternalLink, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/format";
 import type { SessionUser } from "@/lib/auth";
@@ -42,7 +42,7 @@ export function AdminShell({
       <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-forest-100 bg-white">
         <div className="h-16 flex items-center px-5 border-b border-forest-50">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <LeafMark className="w-8 h-8 text-forest-800 group-hover:-rotate-6 transition-transform" />
+            <LogoImage className="w-auto transition-transform duration-300 group-hover:scale-[1.03]" />
             <div className="leading-tight">
               <p className="font-display font-semibold text-forest-900 text-[0.95rem]">Whispering Green</p>
               <p className="text-[0.6rem] tracking-[0.2em] uppercase text-charcoal-soft/70">Staff dashboard</p>

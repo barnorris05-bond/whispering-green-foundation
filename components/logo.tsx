@@ -1,39 +1,71 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/format";
+import logoFull from "@/public/brand/wgf-logo.png";
+import logoMark from "@/public/brand/wgf-icon.png";
 
 /**
- * Placeholder concept wordmark — NOT an official logo.
- * A simple two-stroke leaf paired with the foundation name.
+ * Official Whispering Green Foundation logo (supplied brand asset).
+ * - `Logo`     — full lockup: heart + leaves + heartbeat + wordmark (light backgrounds)
+ * - `LogoOnDark` — full lockup on a white chip for dark surfaces (footer)
+ * - `LogoMark` — square heart-and-leaves mark for compact spots
+ * Aspect ratio is preserved; never stretch or recolour the asset.
  */
-export function LeafMark({ className }: { className?: string }) {
+
+/** Image-only lockup — use inside your own link (never nest <a> in <a>). */
+export function LogoImage({ className, priority }: { className?: string; priority?: boolean }) {
   return (
-    <svg viewBox="0 0 32 32" fill="none" className={className} aria-hidden="true">
-      <path
-        d="M16 28C16 28 5 22.5 5 12.5C5 7 9.5 3.5 16 3.5C22.5 3.5 27 7 27 12.5C27 22.5 16 28 16 28Z"
-        fill="url(#wgf-leaf-grad)"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-      <path d="M16 8.5V24M16 12.5C14 12.5 11.5 11 11.5 8.5C14 8.5 16 10 16 12.5ZM16 17C18 17 20.5 15.5 20.5 13C18 13 16 14.5 16 17Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      <defs>
-        <linearGradient id="wgf-leaf-grad" x1="5" y1="4" x2="27" y2="28" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#86c961" />
-          <stop offset="1" stopColor="#2c5332" />
-        </linearGradient>
-      </defs>
-    </svg>
+    <Image
+      src={logoFull}
+      alt="Whispering Green Foundation logo"
+      priority={priority}
+      className={cn("h-10 w-auto sm:h-11", className)}
+      sizes="160px"
+    />
   );
 }
 
-export function Logo({ compact, className }: { compact?: boolean; className?: string }) {
+export function Logo({ className, priority }: { className?: string; priority?: boolean }) {
   return (
-    <Link href="/" className={cn("inline-flex items-center gap-2.5 group", className)} aria-label="Whispering Green Foundation — home">
-      <LeafMark className="w-8 h-8 text-forest-800 transition-transform duration-300 group-hover:-rotate-6" />
-      <span className={cn("leading-tight", compact && "sr-only")}>
-        <span className="block font-display font-semibold text-forest-900 text-[1.05rem] tracking-tight">Whispering Green</span>
-        <span className="block text-[0.66rem] tracking-[0.22em] uppercase text-charcoal-soft/75 -mt-0.5">Foundation</span>
-      </span>
+    <Link
+      href="/"
+      className={cn("inline-flex items-center group shrink-0", className)}
+      aria-label="Whispering Green Foundation — home"
+    >
+      <LogoImage
+        priority={priority}
+        className="transition-transform duration-300 group-hover:scale-[1.03]"
+      />
     </Link>
+  );
+}
+
+export function LogoOnDark({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-xl bg-white px-3 py-1.5 shadow-soft",
+        className
+      )}
+    >
+      <Image
+        src={logoFull}
+        alt="Whispering Green Foundation logo"
+        className="h-11 w-auto"
+        sizes="176px"
+      />
+    </span>
+  );
+}
+
+export function LogoMark({ className }: { className?: string }) {
+  return (
+    <Image
+      src={logoMark}
+      alt=""
+      aria-hidden="true"
+      className={cn("w-10 h-10 rounded-lg", className)}
+      sizes="40px"
+    />
   );
 }

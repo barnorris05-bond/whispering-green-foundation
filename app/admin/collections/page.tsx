@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { formatDate, formatIN } from "@/lib/format";
+import { formatDate, formatIN, toDateInput } from "@/lib/format";
 import { CATEGORY_LABELS, WASTE_CATEGORIES } from "@/lib/domain";
 import { Badge, STATUS_TONES, EmptyState } from "@/components/ui";
 import { Recycle, Plus } from "lucide-react";
@@ -13,6 +13,13 @@ export default async function AdminCollectionsPage({
   searchParams: Promise<{ status?: string; category?: string; requestId?: string }>;
 }) {
   const sp = await searchParams;
+  // When arriving from a completed request, prefill the new-record form with that request.
+  const prefillRequest = sp.requestId
+    ? await prisma.collectionRequest.findUnique({
+        where: { id: sp.requestId },
+        select: { id: true, referenceCode: true },
+      })
+    : null;
 
   const where = {
     AND: [sp.status ? { verificationStatus: sp.status } : {}, sp.category ? { category: sp.category } : {}],
@@ -61,6 +68,7 @@ export default async function AdminCollectionsPage({
             requests={requests}
             events={events}
             projects={projects}
+            prefillRequestId={prefillRequest?.id}
           />
         </div>
       </section>
@@ -130,7 +138,7 @@ export default async function AdminCollectionsPage({
                           mode="edit"
                           record={{
                             id: r.id,
-                            collectionDate: r.collectionDate.toISOString().slice(0, 10),
+                            collectionDate: toDateInput(r.collectionDate),
                             locality: r.locality,
                             category: r.category,
                             quantity: r.quantity,

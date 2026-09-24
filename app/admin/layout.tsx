@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -5,6 +6,11 @@ import { AdminShell } from "@/components/admin-shell";
 import { AdminNav } from "@/components/admin-nav";
 
 export const dynamic = "force-dynamic";
+
+/** Staff-only area: keep every admin route out of search indexes. */
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();

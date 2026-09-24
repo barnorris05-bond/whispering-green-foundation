@@ -42,8 +42,34 @@ export async function updateRequestStatus(_prev: ActionState, formData: FormData
   if (!request) return { ok: false, error: "Request not found." };
 
   const allowed = STATUS_TRANSITIONS[request.status] ?? [];
-  if (!allowed.includes(newStatus)) {
+  const isReschedule = request.status === "scheduled" && newStatus === "scheduled";
+  if (!allowed.includes(newStatus) && !isReschedule) {
     return { ok: false, error: `Cannot move from "${request.status}" to "${newStatus}".` };
+  }
+
+  // Rejections and cancellations must always carry a resident-readable reason.
+  if ((newStatus === "rejected" || newStatus === "cancelled") && !note) {
+    return { ok: false, error: "A reason is required — write it in the note to the resident, then retry." };
+  }
+
+  // Scheduling requires a valid date that is not in the past.
+  let scheduledAt: Date | null = request.scheduledDate;
+  if (newStatus === "scheduled") {
+    if (!/\d{4}-\d{2}-\d{2}/.test(scheduledDate)) {
+      return { ok: false, error: "Pick a collection date to schedule this request." };
+    }
+    scheduledAt = new Date(`${scheduledDate}T00:00:00`);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (Number.isNaN(scheduledAt.getTime()) || scheduledAt < today) {
+      return { ok: false, error: "The collection date cannot be in the past — reschedule with today or a later date." };
+    }
+    // An optional linked event must exist and actually be published.
+    if (assignedEventId) {
+      const ev = await prisma.event.findUnique({ where: { id: assignedEventId }, select: { status: true } });
+      if (!ev || ev.status !== "published") {
+        return { ok: false, error: "Linked event not found or not published — pick a published event or leave it empty." };
+      }
+    }
   }
 
   await prisma.$transaction(async (tx) => {
@@ -51,7 +77,7 @@ export async function updateRequestStatus(_prev: ActionState, formData: FormData
       where: { id: requestId },
       data: {
         status: newStatus,
-        scheduledDate: scheduledDate ? new Date(`${scheduledDate}T00:00:00`) : request.scheduledDate,
+        scheduledDate: scheduledAt,
         assignedEventId: assignedEventId || null,
       },
     });

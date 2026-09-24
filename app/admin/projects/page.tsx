@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { Badge, EmptyState } from "@/components/ui";
+import { toDateInput } from "@/lib/format";
 import { FolderKanban, Plus } from "lucide-react";
 import { ProjectsManager } from "./projects-manager";
 
@@ -48,8 +49,8 @@ export default async function AdminProjectsPage() {
                   category: p.category,
                   description: p.description,
                   locality: p.locality,
-                  startDate: p.startDate ? p.startDate.toISOString().slice(0, 10) : "",
-                  endDate: p.endDate ? p.endDate.toISOString().slice(0, 10) : "",
+                  startDate: toDateInput(p.startDate),
+                  endDate: toDateInput(p.endDate),
                   status: p.status,
                   visibility: p.visibility,
                 }}

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { formatDate } from "@/lib/format";
+import { formatDate, toDateInput } from "@/lib/format";
 import { Badge, EmptyState } from "@/components/ui";
 import { CalendarDays, Plus } from "lucide-react";
 import { EventsManager } from "./events-manager";
@@ -54,11 +54,11 @@ export default async function AdminEventsPage() {
                   id: e.id,
                   title: e.title,
                   description: e.description,
-                  eventDate: e.eventDate.toISOString().slice(0, 10),
+                  eventDate: toDateInput(e.eventDate),
                   startTime: e.startTime ?? "",
                   endTime: e.endTime ?? "",
                   locality: e.locality,
-                  registrationDeadline: e.registrationDeadline ? e.registrationDeadline.toISOString().slice(0, 10) : "",
+                  registrationDeadline: toDateInput(e.registrationDeadline),
                   capacity: e.capacity,
                   status: e.status,
                 }}
