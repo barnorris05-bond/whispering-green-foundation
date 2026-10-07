@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { Reveal, SectionHeading, EmptyState } from "@/components/ui";
+import { absoluteUrl } from "@/lib/site";
 import { GalleryGrid } from "./gallery-grid";
 import { ImageIcon } from "lucide-react";
 
@@ -9,6 +10,13 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Gallery",
   description: "Photos from Whispering Green Foundation events and collection drives.",
+  alternates: { canonical: absoluteUrl("/gallery") },
+  openGraph: {
+    title: "Gallery · Whispering Green Foundation",
+    description: "Moments from community drives and events across Vasai-West.",
+    url: absoluteUrl("/gallery"),
+    type: "website",
+  },
 };
 
 export default async function GalleryPage() {
@@ -35,15 +43,16 @@ export default async function GalleryPage() {
           hint="Staff can upload photos from the admin gallery with captions and alt text."
         />
       ) : (
-        <GalleryGrid
-          items={media.map((m) => ({
-            id: m.id,
-            src: `/api/media/${m.id}`,
-            caption: m.caption,
-            alt: m.altText ?? m.caption ?? "Gallery photo",
-            event: m.event?.title,
-          }))}
-        />
+      <GalleryGrid
+        items={media.map((m) => ({
+          id: m.id,
+          // Local SVG artwork bypasses the image optimizer; uploads are re-encoded.
+          isVector: m.storagePath.startsWith("artwork:"),
+          caption: m.caption,
+          alt: m.altText ?? m.caption ?? "Gallery photo",
+          event: m.event?.title,
+        }))}
+      />
       )}
     </div>
   );

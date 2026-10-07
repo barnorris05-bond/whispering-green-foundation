@@ -3,6 +3,12 @@
 import { useState, useActionState } from "react";
 import { upsertProject, deleteProject } from "@/app/admin/actions";
 import { SubmitButton, useToast, ConfirmDialog, Badge } from "@/components/ui";
+import {
+  PROJECT_CATEGORIES,
+  PROJECT_CATEGORY_LABELS,
+  PROJECT_STATUSES,
+  PROJECT_STATUS_LABELS,
+} from "@/lib/domain";
 import { X } from "lucide-react";
 
 interface ProjectShape {
@@ -20,12 +26,7 @@ interface ProjectShape {
 type State = { ok: boolean; error?: string; message?: string; fieldErrors?: Record<string, string> };
 const initial: State = { ok: false };
 
-const CATEGORIES = [
-  ["waste", "Waste management"],
-  ["education", "Education"],
-  ["cleanup", "Clean-up drives"],
-  ["other", "Other"],
-];
+const CATEGORIES = PROJECT_CATEGORIES.map((c) => [c, PROJECT_CATEGORY_LABELS[c]] as const);
 
 export function ProjectsManager({
   mode,
@@ -40,7 +41,7 @@ export function ProjectsManager({
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const [state, action] = useActionState<State, FormData>(async (prev, fd) => {
+  const [, action] = useActionState<State, FormData>(async (prev, fd) => {
     const res = await upsertProject(prev, fd);
     if (res.ok) {
       push("success", res.message ?? "Saved.");
@@ -90,7 +91,9 @@ export function ProjectsManager({
 
             {mode === "edit" && project && (
               <div className="flex flex-wrap items-center gap-2 mb-5 pb-4 border-b border-sage-200">
-                <Badge tone={project.status === "active" ? "leaf" : "amber"}>{project.status}</Badge>
+                <Badge tone={project.status === "active" ? "leaf" : "amber"}>
+                  {PROJECT_STATUS_LABELS[project.status] ?? project.status}
+                </Badge>
                 <Badge tone={project.visibility === "published" ? "green" : "demo"}>{project.visibility}</Badge>
                 <button onClick={toggleVisibility} className="btn btn-secondary btn-sm">
                   {project.visibility === "published" ? "Unpublish" : "Publish"}
@@ -118,10 +121,9 @@ export function ProjectsManager({
                 <div>
                   <label className="label">Status *</label>
                   <select name="status" defaultValue={project?.status ?? "draft"} className="input">
-                    <option value="draft">Draft</option>
-                    <option value="active">Active</option>
-                    <option value="completed">Completed</option>
-                    <option value="archived">Archived</option>
+                    {PROJECT_STATUSES.map((s) => (
+                      <option key={s} value={s}>{PROJECT_STATUS_LABELS[s]}</option>
+                    ))}
                   </select>
                 </div>
                 <div>

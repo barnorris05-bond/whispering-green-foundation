@@ -16,7 +16,7 @@ export function PasswordForm() {
   useEffect(() => {
     if (state.message) push("success", state.message);
     if (state.error) push("error", state.error);
-  }, [state]);
+  }, [state, push]);
 
   return (
     <form action={action} className="space-y-4 max-w-md">

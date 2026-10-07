@@ -64,12 +64,33 @@ export const MEASUREMENT_TYPES = ["measured", "estimated"] as const;
 
 export const EVENT_STATUSES = ["draft", "published", "completed", "cancelled"] as const;
 export const PROJECT_STATUSES = ["draft", "active", "completed", "archived"] as const;
+
+/**
+ * Project categories are a DIFFERENT set from waste categories
+ * (`WASTE_CATEGORIES`). Using `CATEGORY_LABELS` for a project silently falls
+ * back to the raw column value, which is why these labels live separately.
+ */
+export const PROJECT_CATEGORIES = ["waste", "education", "cleanup", "other"] as const;
+export const PROJECT_CATEGORY_LABELS: Record<string, string> = {
+  waste: "Waste management",
+  education: "Education",
+  cleanup: "Clean-up drives",
+  other: "Other",
+};
+
+export const PROJECT_STATUS_LABELS: Record<string, string> = {
+  draft: "Draft",
+  active: "Active",
+  completed: "Completed",
+  archived: "Archived",
+};
 export const CONTENT_CATEGORIES = [
   "waste_segregation",
   "plastic_awareness",
   "recycling",
   "responsible_disposal",
   "community_action",
+  "founder_note",
 ] as const;
 export const CONTENT_CATEGORY_LABELS: Record<string, string> = {
   waste_segregation: "Waste segregation",
@@ -77,7 +98,21 @@ export const CONTENT_CATEGORY_LABELS: Record<string, string> = {
   recycling: "Recycling",
   responsible_disposal: "Responsible disposal",
   community_action: "Community action",
+  founder_note: "Founder's story (Foundation Journey)",
 };
+
+/**
+ * `founder_note` entries are authored through the normal admin content editor
+ * but belong to /journey, not to the awareness portal. Everything that lists or
+ * filters public articles must use `AWARENESS_CATEGORIES` instead of
+ * `CONTENT_CATEGORIES` so the founder's message never leaks into the portal.
+ */
+export const JOURNEY_CONTENT_CATEGORY = "founder_note";
+
+/** Public awareness categories (everything except Journey-only content). */
+export const AWARENESS_CATEGORIES = CONTENT_CATEGORIES.filter(
+  (c) => c !== JOURNEY_CONTENT_CATEGORY
+);
 
 export const LOCALITIES = [
   "Vasai-West (general)",
@@ -89,79 +124,3 @@ export const LOCALITIES = [
   "Rangaon",
   "Other",
 ] as const;
-
-// ------------------------------------------------------------------- schemas
-
-import { z } from "zod";
-
-const contact = z
-  .string()
-  .trim()
-  .min(1, "Provide a contact so we can confirm the collection.");
-
-export const collectionRequestSchema = z
-  .object({
-    name: z.string().trim().min(2, "Please enter your full name.").max(80),
-    email: z
-      .union([z.string().trim().email("Enter a valid email address."), z.literal("")])
-      .optional()
-      .transform((v) => (v ? v : undefined)),
-    phone: z
-      .union([
-        z
-          .string()
-          .trim()
-          .regex(/^[+\d][\d\s-]{6,17}$/, "Enter a valid phone number."),
-        z.literal(""),
-      ])
-      .optional()
-      .transform((v) => (v ? v : undefined)),
-    category: z.enum(WASTE_CATEGORIES, { message: "Choose a waste category." }),
-    description: z.string().trim().min(10, "Describe the waste in at least 10 characters.").max(2000),
-    quantity: z
-      .union([z.coerce.number().positive("Quantity must be a positive number.").max(100000), z.literal("")])
-      .optional()
-      .transform((v) => (v === "" || v === undefined ? undefined : Number(v))),
-    unit: z.enum(UNITS).default("kg"),
-    locality: z.string().trim().min(2, "Tell us the locality/area.").max(80),
-    address: z.string().trim().max(300).optional().transform((v) => (v ? v : undefined)),
-    preferredDate: z
-      .union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use the date picker."), z.literal("")])
-      .optional()
-      .transform((v) => (v ? v : undefined)),
-    consent: z.literal(true, { message: "Please acknowledge the request terms." }),
-  })
-  .refine((d) => Boolean(d.email || d.phone), {
-    message: "Provide at least one valid contact method (email or phone).",
-    path: ["email"],
-  })
-  .refine(
-    (d) => !d.preferredDate || new Date(`${d.preferredDate}T23:59:59`) >= new Date(),
-    { message: "Preferred date cannot be in the past.", path: ["preferredDate"] }
-  )
-  .refine((d) => Boolean(d.email || d.phone), {
-    message: "At least one contact method is required.",
-    path: ["phone"],
-  });
-
-export type CollectionRequestInput = z.infer<typeof collectionRequestSchema>;
-
-export const contactMessageSchema = z.object({
-  name: z.string().trim().min(2, "Please enter your name.").max(80),
-  email: z.union([z.string().trim().email("Enter a valid email."), z.literal("")]).optional(),
-  phone: z.string().trim().max(20).optional(),
-  subject: z.string().trim().min(3, "Add a short subject.").max(120),
-  message: z.string().trim().min(10, "Message must be at least 10 characters.").max(3000),
-});
-
-export const volunteerSchema = z.object({
-  eventId: z.string().min(1),
-  name: z.string().trim().min(2, "Please enter your full name.").max(80),
-  email: z.string().trim().email("Enter a valid email address."),
-  phone: z.string().trim().max(20).optional(),
-});
-
-export const trackSchema = z.object({
-  referenceCode: z.string().trim().min(6).max(20).regex(/^[A-Z0-9-]+$/i, "Reference codes contain letters, numbers and dashes."),
-  contact: z.string().trim().min(3, "Enter the email or phone you submitted with."),
-});

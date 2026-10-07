@@ -21,7 +21,7 @@ export function StaffManager({
   const [open, setOpen] = useState(false);
   const [confirmDisable, setConfirmDisable] = useState(false);
 
-  const [state, action] = useActionState<State, FormData>(async (prev, fd) => {
+  const [, action] = useActionState<State, FormData>(async (prev, fd) => {
     const res = await createStaff(prev, fd);
     if (res.ok) {
       push("success", res.message ?? "Created.");

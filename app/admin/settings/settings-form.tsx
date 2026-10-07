@@ -16,7 +16,7 @@ export function SettingsForm({ settings }: { settings: Record<string, string> })
   useEffect(() => {
     if (state.message) push("success", state.message);
     if (state.error) push("error", state.error);
-  }, [state]);
+  }, [state, push]);
 
   return (
     <form action={action} className="card p-7 space-y-4">

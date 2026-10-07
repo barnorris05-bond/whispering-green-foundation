@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatDate, formatDateTime, toDateInput } from "@/lib/format";
-import { CATEGORY_LABELS, REQUEST_STATUSES, STATUS_LABELS, STATUS_TRANSITIONS } from "@/lib/domain";
+import { CATEGORY_LABELS, STATUS_LABELS, STATUS_TRANSITIONS } from "@/lib/domain";
+import { AUDIT_ACTIONS } from "@/lib/audit";
 import { Badge, STATUS_TONES, Breadcrumbs } from "@/components/ui";
 import { RequestStatusPanel } from "./status-panel";
-import { ShieldCheck, MapPin, CalendarDays, Lock, ImageIcon, History, ArrowRight } from "lucide-react";
+import { ShieldCheck, MapPin, CalendarDays, Lock, ImageIcon, History, ArrowRight, MessageSquareLock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +22,25 @@ export default async function AdminRequestDetail({ params }: { params: Promise<{
   });
   if (!request) notFound();
 
-  const events = await prisma.event.findMany({
-    where: { status: "published", eventDate: { gte: new Date() } },
-    select: { id: true, title: true, eventDate: true },
-    orderBy: { eventDate: "asc" },
-  });
+  // Independent of each other — fetched in parallel.
+  const [events, internalNotes] = await Promise.all([
+    prisma.event.findMany({
+      where: { status: "published", eventDate: { gte: new Date() } },
+      select: { id: true, title: true, eventDate: true },
+      orderBy: { eventDate: "asc" },
+    }),
+    // Internal notes live in the staff-only audit log (see addInternalNote).
+    prisma.auditLog.findMany({
+      where: {
+        entityType: "CollectionRequest",
+        entityId: id,
+        action: AUDIT_ACTIONS.requestInternalNote,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      include: { actor: { select: { name: true } } },
+    }),
+  ]);
 
   const nextStatuses = STATUS_TRANSITIONS[request.status] ?? [];
 
@@ -122,6 +137,29 @@ export default async function AdminRequestDetail({ params }: { params: Promise<{
             events={events.map((e) => ({ id: e.id, title: e.title, date: formatDate(e.eventDate) }))}
           />
 
+          <div className="card p-6">
+            <h3 className="font-semibold text-charcoal mb-1 flex items-center gap-2">
+              <MessageSquareLock className="w-4.5 h-4.5 text-forest-600" /> Internal notes
+            </h3>
+            <p className="text-xs text-charcoal-soft/80 mb-4">
+              Staff only — these are never shown to the resident and never appear in tracking.
+            </p>
+            {internalNotes.length === 0 ? (
+              <p className="text-sm text-charcoal-soft">No internal notes yet.</p>
+            ) : (
+              <ul className="space-y-3.5">
+                {internalNotes.map((n) => (
+                  <li key={n.id} className="border-l-2 border-clay pl-3.5">
+                    <p className="text-sm text-charcoal leading-relaxed whitespace-pre-line">{readNote(n.metadata)}</p>
+                    <p className="text-xs text-charcoal-soft/60 mt-1">
+                      {formatDateTime(n.createdAt)}{n.actor ? ` · ${n.actor.name}` : ""}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
           {request.status === "completed" && request.records.length === 0 && (
             <div className="card p-6 border-leaf-200 bg-leaf-100/40">
               <h3 className="font-semibold text-charcoal text-sm">Outcome not yet recorded</h3>
@@ -141,6 +179,17 @@ export default async function AdminRequestDetail({ params }: { params: Promise<{
       </div>
     </div>
   );
+}
+
+/** Audit metadata is a JSON string; fail soft if it is ever malformed. */
+function readNote(metadata: string | null): string {
+  if (!metadata) return "(empty note)";
+  try {
+    const parsed = JSON.parse(metadata) as { note?: unknown };
+    return typeof parsed.note === "string" && parsed.note.trim() ? parsed.note : "(empty note)";
+  } catch {
+    return metadata;
+  }
 }
 
 function Row({ label, value, icon, wide, mono }: { label: React.ReactNode; value: React.ReactNode; icon?: React.ReactNode; wide?: boolean; mono?: boolean }) {

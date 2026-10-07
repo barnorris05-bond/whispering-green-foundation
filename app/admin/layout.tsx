@@ -7,8 +7,12 @@ import { AdminNav } from "@/components/admin-nav";
 
 export const dynamic = "force-dynamic";
 
-/** Staff-only area: keep every admin route out of search indexes. */
+/**
+ * Staff-only area: keep every admin route out of search indexes, and give the
+ * tab a meaningful title instead of inheriting the public homepage title.
+ */
 export const metadata: Metadata = {
+  title: { default: "Staff dashboard", template: "%s · Whispering Green Foundation" },
   robots: { index: false, follow: false },
 };
 

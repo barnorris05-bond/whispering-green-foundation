@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { CATEGORY_LABELS } from "@/lib/domain";
+import { PROJECT_CATEGORY_LABELS, PROJECT_STATUS_LABELS } from "@/lib/domain";
 import { formatDate, formatIN } from "@/lib/format";
 import { Badge, EmptyState, Breadcrumbs } from "@/components/ui";
+import { MediaImage } from "@/components/media-image";
+import { absoluteUrl } from "@/lib/site";
 import { MapPin, CalendarRange, ShieldCheck, ImageIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const project = await prisma.project.findUnique({ where: { slug } });
   if (!project || project.visibility !== "published") return { title: "Project" };
-  return { title: project.title, description: project.description.slice(0, 150) };
+  return {
+    title: project.title,
+    description: project.description.slice(0, 150),
+    alternates: { canonical: absoluteUrl(`/projects/${project.slug}`) },
+    openGraph: { title: project.title, description: project.description.slice(0, 150), type: "article" },
+  };
 }
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -36,8 +42,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
       <div className="mt-6">
         <div className="flex flex-wrap gap-2">
-          <Badge tone="green">{CATEGORY_LABELS[project.category] ?? project.category}</Badge>
-          <Badge tone={project.status === "active" ? "leaf" : "gray"}>{project.status}</Badge>
+          <Badge tone="green">{PROJECT_CATEGORY_LABELS[project.category] ?? project.category}</Badge>
+          <Badge tone={project.status === "active" ? "leaf" : "gray"}>
+            {PROJECT_STATUS_LABELS[project.status] ?? project.status}
+          </Badge>
         </div>
         <h1 className="font-display text-4xl font-semibold text-forest-950 tracking-tight mt-4">{project.title}</h1>
         <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-charcoal-soft mt-4">
@@ -65,9 +73,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {project.media.map((m) => (
-                  <div key={m.id} className="rounded-xl overflow-hidden border border-sage-200 bg-sage-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/api/media/${m.id}`} alt={m.altText ?? m.caption ?? "Project photo"} className="w-full h-32 object-cover" loading="lazy" />
+                  <div key={m.id} className="relative aspect-[4/3] rounded-xl overflow-hidden border border-sage-200 bg-sage-100">
+                    <MediaImage
+                      id={m.id}
+                      alt={m.altText ?? m.caption ?? "Project photo"}
+                      isVector={m.storagePath.startsWith("artwork:")}
+                      sizes="(min-width: 640px) 200px, 45vw"
+                    />
                   </div>
                 ))}
               </div>

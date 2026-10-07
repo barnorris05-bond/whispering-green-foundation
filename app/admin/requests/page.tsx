@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { REQUEST_STATUSES, STATUS_LABELS, CATEGORY_LABELS, WASTE_CATEGORIES } from "@/lib/domain";
 import { Badge, STATUS_TONES, EmptyState } from "@/components/ui";
-import { ClipboardList, Search } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 

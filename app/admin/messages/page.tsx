@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { Badge, EmptyState } from "@/components/ui";
-import { Mail, Archive, Trash2, MailOpen } from "lucide-react";
+import { Mail } from "lucide-react";
 import { MessageActions } from "./message-actions";
 
 export const dynamic = "force-dynamic";

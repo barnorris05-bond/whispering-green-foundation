@@ -69,7 +69,14 @@ Copy `.env.example` → `.env`:
 DATABASE_URL="postgresql://…-pooler…neon.tech/neondb?sslmode=require"   # pooled — runtime
 DIRECT_URL="postgresql://…neon.tech/neondb?sslmode=require"             # direct — migrations
 UPLOAD_DIR="uploads"                                                   # local uploads folder
+NEXT_PUBLIC_SITE_URL="https://your-domain.example"                    # optional — see below
 ```
+
+`NEXT_PUBLIC_SITE_URL` is **optional** and is the canonical origin used by page metadata,
+`robots.txt` and `sitemap.xml`. Resolution order: this variable → Vercel's own deployment origin
+(injected automatically, so hosted previews are correct with no configuration) → nothing, in
+which case **no** absolute canonical/Open Graph URLs are emitted at all. Set it in Vercel →
+Settings → Environment Variables once the site has a custom domain, and keep it in sync with it.
 
 `DATABASE_URL` is the **pooled** connection string (use it for the app), `DIRECT_URL` is
 the **direct, non-pooled** string (use it for migrations — Neon/Supabase poolers do not
@@ -103,7 +110,7 @@ pipeline is visible immediately; delete it in Admin → Collections if you want 
 
 ## Route map
 
-**Public** — `/` · `/about` · `/initiatives` · `/projects/[slug]` · `/events` ·
+**Public** — `/` · `/about` · `/journey` · `/initiatives` · `/projects/[slug]` · `/events` ·
 `/events/[slug]` · `/awareness` · `/awareness/[slug]` · `/gallery` · `/contact` ·
 `/request-collection` · `/track-request` · `/login`
 
@@ -112,9 +119,33 @@ pipeline is visible immediately; delete it in Admin → Collections if you want 
 `/admin/content` · `/admin/gallery` · `/admin/messages` · `/admin/staff` *(founder only)* ·
 `/admin/settings` *(founder only; password change for everyone)*
 
+## Editing the Foundation Journey (`/journey`)
+
+`/journey` is a hand-built storytelling page. Its content lives in exactly two places:
+
+1. **`lib/journey.ts`** — the hero copy, the founder backstory slot, the four timeline eras, the
+   six activity strands, the "where we are today" text and "The Next Chapter". Every fact we
+   cannot verify is written in **[square brackets]** and tagged `source: "placeholder"`, which
+   renders a visible *“Awaiting foundation input”* badge on that timeline card. To fill one in:
+   replace the bracketed sentence, then change that era's `source` to `"verified"`.
+2. **The founder's own words** — authored by staff in **Admin → Awareness content** with the
+   category **“Founder's story (Foundation Journey)”**, published like any other item. It appears
+   automatically in the *From the Founder* card and is deliberately kept out of the awareness
+   portal, the homepage article list, `/awareness/<slug>` and `sitemap.xml`.
+
+The verified impact figure on `/journey` is read live from collection records (kilogram records
+with `verificationStatus = "verified"` only) — it is never hard-coded.
+
+`/journey`, `/about`, `/request-collection`, `/contact`, `/track-request` and `/login` contain no
+invented dates, names, awards, partnerships or contact details. **Do not add any** — that
+constraint is intentional and is what makes the page credible.
+
 ## Data privacy model
 
 - Request **address, email, phone** are staff-only; they never appear in public pages or APIs.
+- **Internal notes** on a request are written to the staff-only `AuditLog`, never to
+  `RequestStatusHistory` — the tracking API publishes every history entry that carries a note, so a
+  history row would leak staff-only notes to the resident.
 - Tracking requires reference code **plus** matching contact — a guessed code reveals nothing.
 - Resident photos and private media: only `approved` gallery media is served publicly
   (`/api/media/[id]` checks visibility).
@@ -164,6 +195,9 @@ Deployed-demo differences: photo uploads are rejected with a clear message (Verc
 serverless filesystem is read-only — submit without a photo; the seeded artwork gallery
 still renders); rate limiting is per serverless instance; admin/staff logins use the
 same seeded accounts.
+
+Also set `NEXT_PUBLIC_SITE_URL` (see *Environment variables*) so canonical URLs, `robots.txt`
+and `sitemap.xml` point at the real domain instead of being omitted.
 
 ## Known limitations (localhost MVP)
 

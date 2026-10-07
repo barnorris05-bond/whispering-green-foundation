@@ -2,14 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+import { absoluteUrl } from "@/lib/site";
 import { Reveal, SectionHeading, Badge, EmptyState } from "@/components/ui";
-import { CalendarDays, MapPin, Clock, ArrowRight } from "lucide-react";
+import { CalendarDays, MapPin, Clock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Events",
   description: "Clean-up drives, awareness sessions and community events by Whispering Green Foundation.",
+  alternates: { canonical: absoluteUrl("/events") },
+  openGraph: {
+    title: "Events · Whispering Green Foundation",
+    description: "Clean-up drives, awareness sessions and community events across Vasai-West.",
+    url: absoluteUrl("/events"),
+    type: "website",
+  },
 };
 
 export default async function EventsPage({

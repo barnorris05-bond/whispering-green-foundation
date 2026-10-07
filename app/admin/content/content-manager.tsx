@@ -33,7 +33,7 @@ export function ContentManager({
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const [state, action] = useActionState<State, FormData>(async (prev, fd) => {
+  const [, action] = useActionState<State, FormData>(async (prev, fd) => {
     const res = await upsertContent(prev, fd);
     if (res.ok) {
       push("success", res.message ?? "Saved.");

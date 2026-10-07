@@ -1,18 +1,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { formatIN, formatDateTime, timeAgo, toDateInput } from "@/lib/format";
+import { formatIN, timeAgo, toDateInput } from "@/lib/format";
 import { STATUS_LABELS } from "@/lib/domain";
 import { Badge, STATUS_TONES } from "@/components/ui";
 import {
   ClipboardList, CalendarClock, CheckCircle2, CalendarDays, Users, ArrowRight, Activity,
 } from "lucide-react";
-import { ImpactChart } from "./impact-chart";
+import { LazyImpactChart } from "./impact-chart-lazy";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  const now = new Date();
-
   const [
     pendingCount,
     scheduledCount,
@@ -92,7 +90,7 @@ export default async function AdminDashboard() {
             Verified records only (kg). Draft/unverified records and raw requests are excluded.
           </p>
           {hasChartData ? (
-            <ImpactChart
+            <LazyImpactChart
               data={verified
                 .filter((r) => r.unit === "kg")
                 .map((r) => ({

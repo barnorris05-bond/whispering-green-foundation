@@ -1,14 +1,52 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Reveal, SectionHeading, Badge } from "@/components/ui";
-import { Leaf, HeartHandshake, Target, ShieldCheck, BookOpenCheck, Scale } from "lucide-react";
+import { absoluteUrl } from "@/lib/site";
+import {
+  Leaf, HeartHandshake, Target, ShieldCheck, BookOpenCheck, Scale,
+  Truck, Megaphone, Users, Compass, ArrowRight,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Who we are, what we do, and how Whispering Green Foundation works with the Vasai-West community.",
+    "Who we are, what we do, and how Whispering Green Foundation works with the Vasai-West community — including how every published figure is verified.",
+  alternates: { canonical: absoluteUrl("/about") },
+  openGraph: {
+    title: "About · Whispering Green Foundation",
+    description:
+      "A community initiative coordinating household waste collection and environmental awareness in Vasai-West.",
+    url: absoluteUrl("/about"),
+    type: "article",
+  },
 };
 
+/** What the foundation actually does — each card links to the page that shows it. */
+const WHAT_WE_DO = [
+  {
+    icon: Truck,
+    title: "Collect household waste",
+    text: "Residents request a pickup; coordinators review it, agree a date and record what was collected, by locality and by weight.",
+    href: "/request-collection",
+    cta: "Request a collection",
+  },
+  {
+    icon: Megaphone,
+    title: "Explain responsible disposal",
+    text: "Practical guidance on segregation, plastic and recycling, written for Vasai-West households rather than generalised advice.",
+    href: "/awareness",
+    cta: "Open the awareness portal",
+  },
+  {
+    icon: Users,
+    title: "Bring people together",
+    text: "Clean-up drives, segregation sessions and awareness walks that residents and volunteers can join in person.",
+    href: "/events",
+    cta: "See upcoming events",
+  },
+];
+
+/** Why community participation is the whole point. */
 const VALUES = [
   {
     icon: ShieldCheck,
@@ -48,9 +86,13 @@ const APPROACH = [
 export default function AboutPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-14 pb-10">
+      {/* ------------------------------------------------------------ who we are */}
       <Reveal>
-        <h1 className="font-display text-4xl sm:text-5xl font-semibold text-forest-950 tracking-tight">
-          About Whispering Green Foundation
+        <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-wide uppercase bg-white border border-forest-100 text-forest-700 rounded-full px-3.5 py-1.5 shadow-soft">
+          <Leaf className="w-3.5 h-3.5 text-leaf-600" /> About the foundation
+        </span>
+        <h1 className="font-display text-4xl sm:text-5xl font-semibold text-forest-950 tracking-tight mt-5">
+          Who we are
         </h1>
         <p className="text-lg text-charcoal-soft leading-relaxed mt-5 max-w-2xl">
           Whispering Green Foundation is a community initiative coordinating household waste collection and
@@ -59,21 +101,7 @@ export default function AboutPage() {
         </p>
       </Reveal>
 
-      <div className="grid md:grid-cols-3 gap-5 mt-14">
-        {VALUES.map((v, i) => (
-          <Reveal key={v.title} delay={i * 0.08}>
-            <div className="card card-hover p-7 h-full">
-              <div className="w-11 h-11 rounded-xl bg-forest-50 border border-forest-100 flex items-center justify-center text-forest-700 mb-4">
-                <v.icon className="w-5.5 h-5.5" />
-              </div>
-              <h2 className="font-display text-xl font-semibold text-charcoal">{v.title}</h2>
-              <p className="text-sm text-charcoal-soft mt-2.5 leading-relaxed">{v.text}</p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-5 mt-14">
+      <div className="grid md:grid-cols-2 gap-5 mt-10">
         <Reveal>
           <div className="card p-8 h-full">
             <h2 className="font-display text-2xl font-semibold text-charcoal">Our mission</h2>
@@ -95,16 +123,67 @@ export default function AboutPage() {
         </Reveal>
       </div>
 
-      {/* Our approach — transparency about method instead of a bare "note" */}
+      {/* ------------------------------------------------------------ what we do */}
       <section className="mt-16">
         <Reveal>
           <SectionHeading
-            eyebrow="How we work"
+            eyebrow="What we do"
+            title="Three things, done consistently"
+            sub="Collection, explanation and participation — each one backed by a page of this site so you can check the work rather than take our word for it."
+          />
+        </Reveal>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {WHAT_WE_DO.map((w, i) => (
+            <Reveal key={w.title} delay={i * 0.07}>
+              <Link href={w.href} className="card card-hover p-7 h-full flex flex-col group">
+                <div className="w-11 h-11 rounded-xl bg-forest-50 border border-forest-100 flex items-center justify-center text-forest-700 mb-4">
+                  <w.icon className="w-5.5 h-5.5" />
+                </div>
+                <h3 className="font-display text-lg font-semibold text-charcoal">{w.title}</h3>
+                <p className="text-sm text-charcoal-soft mt-2.5 leading-relaxed flex-1">{w.text}</p>
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-forest-700 mt-4 group-hover:gap-2.5 transition-all">
+                  {w.cta} <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* -------------------------------------------------- why community matters */}
+      <section className="mt-16">
+        <Reveal>
+          <SectionHeading
+            eyebrow="Why community matters"
+            title="One household is a habit. A neighbourhood is a result."
+            sub="A single collection changes very little. What makes the numbers move is neighbours taking part at the same time — which is why we organise this work around places and people, not campaigns."
+          />
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-5">
+          {VALUES.map((v, i) => (
+            <Reveal key={v.title} delay={i * 0.08}>
+              <div className="card card-hover p-7 h-full">
+                <div className="w-11 h-11 rounded-xl bg-forest-50 border border-forest-100 flex items-center justify-center text-forest-700 mb-4">
+                  <v.icon className="w-5.5 h-5.5" />
+                </div>
+                <h3 className="font-display text-xl font-semibold text-charcoal">{v.title}</h3>
+                <p className="text-sm text-charcoal-soft mt-2.5 leading-relaxed">{v.text}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------ our approach */}
+      <section className="mt-16">
+        <Reveal>
+          <SectionHeading
+            eyebrow="Our approach"
             title="From logbook to published number"
             sub="Every figure on this site follows the same three-step discipline."
           />
         </Reveal>
-        <div className="grid md:grid-cols-3 gap-5 mt-8">
+        <div className="grid md:grid-cols-3 gap-5">
           {APPROACH.map((a, i) => (
             <Reveal key={a.step} delay={i * 0.08}>
               <div className="card card-hover p-7 h-full relative">
@@ -119,7 +198,41 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* CEP Phase II context — source-grounded, no invented facts */}
+      {/* ------------------------------------------------------- journey CTA band */}
+      <Reveal>
+        <div className="card overflow-hidden mt-16">
+          <div className="grid lg:grid-cols-[1.15fr_1fr]">
+            <div className="p-8 sm:p-10">
+              <Badge tone="leaf">
+                <Compass className="w-3 h-3" /> Foundation Journey
+              </Badge>
+              <h2 className="font-display text-2xl sm:text-3xl font-semibold text-charcoal tracking-tight mt-4">
+                There is more to the story than this page
+              </h2>
+              <p className="text-charcoal-soft leading-relaxed mt-3.5 text-[0.95rem]">
+                The About page explains what we do. The Journey page follows <em>when</em> and <em>how</em> it
+                happened — the early work, the field logbook, and the founder&apos;s own account of how it started.
+              </p>
+              <div className="flex flex-wrap gap-3 mt-7">
+                <Link href="/journey" className="btn btn-primary">
+                  Read the Foundation Journey <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/initiatives" className="btn btn-ghost">See the projects</Link>
+              </div>
+            </div>
+            <div className="relative bg-forest-900 text-forest-50 p-8 sm:p-10 flex flex-col justify-center">
+              <p className="font-display text-xl leading-snug">
+                “We would rather leave a section blank than publish a story we cannot verify.”
+              </p>
+              <p className="text-xs text-forest-300/80 mt-4">
+                How this site treats incomplete records — and why one logbook total is deliberately left unverified.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Reveal>
+
+      {/* ------------------------------------------------ CEP Phase II provenance */}
       <Reveal>
         <div className="card p-8 mt-14 border-clay bg-parchment/60">
           <Badge tone="leaf" className="mb-4">
@@ -154,6 +267,7 @@ export default function AboutPage() {
         </div>
       </Reveal>
 
+      {/* ------------------------------------------------------------- final CTA */}
       <Reveal>
         <div className="card p-8 mt-14 text-center bg-forest-900 text-forest-50 border-forest-900">
           <Leaf className="w-8 h-8 text-leaf-300 mx-auto" />

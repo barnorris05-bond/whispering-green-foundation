@@ -48,6 +48,8 @@
   --animate-scale-in: scale-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-toast-in: toast-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-pop-in: pop-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-drop-in: drop-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(14px); }
@@ -69,10 +71,34 @@
     from { background-position: 200% 0; }
     to { background-position: -200% 0; }
   }
+  /* small success "pop" — used for check marks and confirmation icons */
+  @keyframes pop-in {
+    0% { opacity: 0; transform: scale(0.6); }
+    60% { opacity: 1; transform: scale(1.08); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  /* dropdown / popover entrance */
+  @keyframes drop-in {
+    from { opacity: 0; transform: translateY(-6px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Any in-page anchor ("/admin/settings#password", "#main") must clear the sticky header. */
+[id] {
+  scroll-margin-top: 5.5rem;
+}
+
+/* Balanced headline wrapping; "pretty" avoids orphan words in body copy. */
+h1, h2, h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
 }
 
 body {
@@ -91,13 +117,54 @@ body {
   border-radius: 4px;
 }
 
-/* Reduced motion: disable nonessential animation */
+/* Reduced motion: disable nonessential animation.
+   Animations are shortened rather than removed so that anything relying on
+   `animation-fill-mode: both` still lands in its final (visible) state. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+  .card-hover:hover,
+  .chip-link:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-leaf:hover,
+  .btn:active {
+    transform: none !important;
+  }
+}
+
+/* ---------------- scroll reveal (progressive enhancement only) ----------------
+   The default state is FULLY VISIBLE, so the page still reads correctly when
+   JavaScript is disabled or fails to load. The Reveal component hides an
+   element only once it has confirmed the element is below the fold and that an
+   IntersectionObserver is available; it then transitions it back in.       */
+.reveal {
+  opacity: 1;
+}
+.reveal[data-reveal="hidden"] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.reveal[data-reveal="shown"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal[data-reveal="hidden"],
+  .reveal[data-reveal="shown"] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
 
@@ -159,6 +226,16 @@ body {
 .btn-sm { min-height: 2.15rem; padding: 0 0.9rem; font-size: 0.83rem; }
 .btn-lg { min-height: 3.25rem; padding: 0 1.9rem; font-size: 1rem; }
 
+/* For a button whose label can be long enough to need two lines on a phone.
+   Declared after `.btn` so it wins on source order — `.btn` is unlayered CSS,
+   which outranks the same utility applied as a Tailwind class. */
+.btn-wrap {
+  white-space: normal;
+  text-align: left;
+  padding-block: 0.5rem;
+  line-height: 1.35;
+}
+
 .input {
   @apply w-full bg-white border border-sage-300 rounded-xl px-3.5 py-2.5 text-[0.925rem] text-charcoal
          placeholder:text-charcoal-soft/45 transition-all duration-200
@@ -183,6 +260,16 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* toast: enter via CSS animation, leave via a data attribute + transition */
+.toast {
+  animation: var(--animate-toast-in);
+}
+.toast[data-leaving="true"] {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
 .skeleton {
   @apply rounded-lg bg-sage-100;
   background-image: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.65) 50%, transparent 100%);
@@ -203,6 +290,45 @@ select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csv
 
 /* thin styled scrollbar for tables */
 .scroll-x { overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--color-sage-300) transparent; }
+
+/* skip link for keyboard + screen-reader users (visible only when focused).
+   Written with plain properties rather than @apply so it never depends on
+   another custom class being emitted first. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+}
+.skip-link:focus-visible {
+  position: fixed;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 200;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.15rem;
+  padding: 0 0.9rem;
+  font-size: 0.83rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: 9999px;
+  background: var(--color-forest-700);
+  color: #fff;
+  box-shadow: var(--shadow-lift);
+}
+
+/* focus ring must stay legible on the dark footer / dark panels */
+.bg-forest-900 :focus-visible,
+.bg-forest-950 :focus-visible,
+footer :focus-visible {
+  outline-color: var(--color-leaf-300);
+}
+
+/* journey timeline rail */
+.timeline-rail {
+  background: linear-gradient(to bottom, transparent, var(--color-forest-200) 8%, var(--color-forest-200) 92%, transparent);
+}
 
 .prose-eco { @apply text-charcoal-soft leading-relaxed; }
 .prose-eco h2 { @apply text-xl font-semibold text-charcoal mt-8 mb-3 font-display; }

@@ -1,16 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { CATEGORY_LABELS } from "@/lib/domain";
+import {
+  PROJECT_CATEGORIES,
+  PROJECT_CATEGORY_LABELS,
+  PROJECT_STATUS_LABELS,
+} from "@/lib/domain";
+import { absoluteUrl } from "@/lib/site";
 import { formatDate } from "@/lib/format";
 import { Reveal, SectionHeading, Badge, EmptyState } from "@/components/ui";
-import { MapPin, CalendarRange, ArrowRight, SearchX } from "lucide-react";
+import { MapPin, CalendarRange, SearchX } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Initiatives & Projects",
   description: "Ongoing and completed environmental projects by Whispering Green Foundation in Vasai-West.",
+  alternates: { canonical: absoluteUrl("/initiatives") },
+  openGraph: {
+    title: "Initiatives & Projects · Whispering Green Foundation",
+    description: "Ongoing and completed environmental projects by Whispering Green Foundation in Vasai-West.",
+    url: absoluteUrl("/initiatives"),
+    type: "website",
+  },
 };
 
 export default async function InitiativesPage({
@@ -28,15 +40,22 @@ export default async function InitiativesPage({
     ],
   };
 
-  const projects = await prisma.project.findMany({ where, orderBy: { updatedAt: "desc" } });
-
-  const categories = ["waste", "education", "cleanup", "other"];
-  const CATEGORY_UI: Record<string, string> = {
-    waste: "Waste management",
-    education: "Education",
-    cleanup: "Clean-up drives",
-    other: "Other",
-  };
+  // `select` keeps the payload to the fields the cards actually render.
+  const projects = await prisma.project.findMany({
+    where,
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      category: true,
+      status: true,
+      locality: true,
+      startDate: true,
+      endDate: true,
+    },
+  });
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-14 pb-10">
@@ -60,8 +79,8 @@ export default async function InitiativesPage({
           />
           <select name="category" defaultValue={category ?? ""} className="input sm:max-w-[12rem]" aria-label="Filter by category">
             <option value="">All categories</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>{CATEGORY_UI[c]}</option>
+            {PROJECT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{PROJECT_CATEGORY_LABELS[c]}</option>
             ))}
           </select>
           <button className="btn btn-primary">Filter</button>
@@ -83,9 +102,9 @@ export default async function InitiativesPage({
             <Reveal key={p.id} delay={i * 0.06}>
               <Link href={`/projects/${p.slug}`} className="card card-hover block p-6 h-full group">
                 <div className="flex items-center justify-between">
-                  <Badge tone="green">{CATEGORY_UI[p.category] ?? p.category}</Badge>
+                  <Badge tone="green">{PROJECT_CATEGORY_LABELS[p.category] ?? p.category}</Badge>
                   <Badge tone={p.status === "active" ? "leaf" : p.status === "completed" ? "gray" : "amber"}>
-                    {p.status}
+                    {PROJECT_STATUS_LABELS[p.status] ?? p.status}
                   </Badge>
                 </div>
                 <h2 className="font-display text-lg font-semibold text-charcoal mt-3.5 group-hover:text-forest-700 transition-colors">

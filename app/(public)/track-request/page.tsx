@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Reveal, SectionHeading } from "@/components/ui";
 import { TrackClient } from "./track-client";
-import { Search } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Track a Request",

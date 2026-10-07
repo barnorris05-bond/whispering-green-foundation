@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
 import { Reveal, SectionHeading } from "@/components/ui";
+import { absoluteUrl } from "@/lib/site";
 import { RequestForm } from "./request-form";
 import { ClipboardList, Truck, ShieldCheck, Info } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Request a Collection",
   description: "Request a household waste collection in Vasai-West — plastic, dry recyclables and more.",
+  alternates: { canonical: absoluteUrl("/request-collection") },
+  openGraph: {
+    title: "Request a waste collection · Whispering Green Foundation",
+    description: "Tell us what waste you have and where — you'll get a reference code to track the request.",
+    url: absoluteUrl("/request-collection"),
+    type: "website",
+  },
 };
 
 export default function RequestCollectionPage() {

@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
-import { CONTENT_CATEGORY_LABELS } from "@/lib/domain";
-import { Badge, Breadcrumbs, EmptyState } from "@/components/ui";
+import { CONTENT_CATEGORY_LABELS, JOURNEY_CONTENT_CATEGORY } from "@/lib/domain";
+import { absoluteUrl } from "@/lib/site";
+import { Badge, Breadcrumbs } from "@/components/ui";
 import { Clock, ArrowRight, Info } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -12,14 +13,23 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const a = await prisma.content.findUnique({ where: { slug } });
-  if (!a || a.status !== "published") return { title: "Article" };
-  return { title: a.title, description: a.excerpt ?? undefined };
+  if (!a || a.status !== "published" || a.category === JOURNEY_CONTENT_CATEGORY) {
+    return { title: "Article", robots: { index: false, follow: false } };
+  }
+  return {
+    title: a.title,
+    description: a.excerpt ?? undefined,
+    alternates: { canonical: absoluteUrl(`/awareness/${a.slug}`) },
+    openGraph: { title: a.title, description: a.excerpt ?? undefined, type: "article" },
+  };
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const article = await prisma.content.findUnique({ where: { slug } });
-  if (!article || article.status !== "published") notFound();
+  // The founder's journey note is published through the same editor but is not
+  // an awareness article — it must not be readable at /awareness/<slug>.
+  if (!article || article.status !== "published" || article.category === JOURNEY_CONTENT_CATEGORY) notFound();
 
   const related = await prisma.content.findMany({
     where: { status: "published", category: article.category, id: { not: article.id } },

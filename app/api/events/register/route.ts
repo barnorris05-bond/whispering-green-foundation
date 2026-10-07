@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { volunteerSchema } from "@/lib/domain";
+import { volunteerSchema } from "@/lib/schemas";
 import { getCurrentUser } from "@/lib/auth";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 

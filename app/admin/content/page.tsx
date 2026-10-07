@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
-import { CONTENT_CATEGORIES, CONTENT_CATEGORY_LABELS } from "@/lib/domain";
+import { CONTENT_CATEGORY_LABELS, JOURNEY_CONTENT_CATEGORY } from "@/lib/domain";
 import { Badge, EmptyState } from "@/components/ui";
 import { Newspaper, Plus } from "lucide-react";
 import { ContentManager } from "./content-manager";
@@ -38,9 +38,14 @@ export default async function AdminContentPage() {
                   <h3 className="font-semibold text-charcoal">{a.title}</h3>
                   <Badge tone={a.status === "published" ? "leaf" : a.status === "draft" ? "amber" : "gray"}>{a.status}</Badge>
                 </div>
-                <p className="text-xs text-charcoal-soft mt-1">
-                  {CONTENT_CATEGORY_LABELS[a.category] ?? a.category}
-                  {a.publishedAt ? ` · published ${formatDate(a.publishedAt)}` : " · not published"}
+                <p className="text-xs text-charcoal-soft mt-1 flex flex-wrap items-center gap-2">
+                  <span>
+                    {CONTENT_CATEGORY_LABELS[a.category] ?? a.category}
+                    {a.publishedAt ? ` · published ${formatDate(a.publishedAt)}` : " · not published"}
+                  </span>
+                  {a.category === JOURNEY_CONTENT_CATEGORY && (
+                    <Badge tone="demo">Shown on the Journey page, not the awareness portal</Badge>
+                  )}
                 </p>
               </div>
               <ContentManager

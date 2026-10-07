@@ -2,15 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
-import { CONTENT_CATEGORY_LABELS } from "@/lib/domain";
+import { AWARENESS_CATEGORIES, CONTENT_CATEGORY_LABELS, JOURNEY_CONTENT_CATEGORY } from "@/lib/domain";
+import { absoluteUrl } from "@/lib/site";
 import { Reveal, SectionHeading, Badge, EmptyState } from "@/components/ui";
-import { BookOpen, Clock, SearchX } from "lucide-react";
+import { Clock, SearchX } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Awareness Portal",
   description: "Practical guides on waste segregation, plastic reduction, recycling and responsible disposal.",
+  alternates: { canonical: absoluteUrl("/awareness") },
+  openGraph: {
+    title: "Awareness portal · Whispering Green Foundation",
+    description: "Short, practical guidance on segregation, plastic and responsible disposal for Vasai-West households.",
+    url: absoluteUrl("/awareness"),
+    type: "website",
+  },
 };
 
 export default async function AwarenessPage({
@@ -23,6 +31,9 @@ export default async function AwarenessPage({
   const where = {
     status: "published" as const,
     AND: [
+      // The founder's journey note is authored through the same editor but is not
+      // awareness content — it belongs to /journey only.
+      { category: { not: JOURNEY_CONTENT_CATEGORY } },
       q ? { OR: [{ title: { contains: q } }, { excerpt: { contains: q } }, { body: { contains: q } }] } : {},
       category ? { category } : {},
     ],
@@ -45,8 +56,8 @@ export default async function AwarenessPage({
           <input type="search" name="q" defaultValue={q} placeholder="Search articles…" className="input sm:max-w-xs" aria-label="Search articles" />
           <select name="category" defaultValue={category ?? ""} className="input sm:max-w-[13rem]" aria-label="Filter by category">
             <option value="">All topics</option>
-            {Object.entries(CONTENT_CATEGORY_LABELS).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
+            {AWARENESS_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{CONTENT_CATEGORY_LABELS[c]}</option>
             ))}
           </select>
           <button className="btn btn-primary">Search</button>

@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
 import { Reveal, SectionHeading, Badge } from "@/components/ui";
+import { absoluteUrl } from "@/lib/site";
 import { ContactForm } from "./contact-form";
 import { Mail, MessageSquare, MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Contact",
   description: "Send a message to Whispering Green Foundation — we read every message.",
+  alternates: { canonical: absoluteUrl("/contact") },
+  openGraph: {
+    title: "Contact · Whispering Green Foundation",
+    description: "Questions about collections, events or partnerships — send the foundation a message.",
+    url: absoluteUrl("/contact"),
+    type: "website",
+  },
 };
 
 export default function ContactPage() {

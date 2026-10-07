@@ -40,7 +40,7 @@ async function main() {
   const founderHash = await hashPassword("Founder@123");
   const staffHash = await hashPassword("Staff@123");
 
-  const founder = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: "founder@wgf.demo" },
     update: {},
     create: {

@@ -3,7 +3,7 @@
 import { useState, useActionState } from "react";
 import { upsertEvent, setEventStatus, deleteEvent } from "@/app/admin/actions";
 import { SubmitButton, useToast, ConfirmDialog, Badge } from "@/components/ui";
-import { X, ChevronDown } from "lucide-react";
+import { X } from "lucide-react";
 
 interface EventShape {
   id: string;
@@ -41,7 +41,7 @@ export function EventsManager({
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const [state, action] = useActionState<State, FormData>(async (prev, fd) => {
+  const [, action] = useActionState<State, FormData>(async (prev, fd) => {
     const res = await upsertEvent(prev, fd);
     if (res.ok) {
       push("success", res.message ?? "Saved.");

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { Badge, EmptyState } from "@/components/ui";
+import { PROJECT_STATUS_LABELS } from "@/lib/domain";
 import { toDateInput } from "@/lib/format";
 import { FolderKanban, Plus } from "lucide-react";
 import { ProjectsManager } from "./projects-manager";
@@ -35,7 +36,9 @@ export default async function AdminProjectsPage() {
               <div className="flex-1 min-w-[14rem]">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-semibold text-charcoal">{p.title}</h3>
-                  <Badge tone={p.status === "active" ? "leaf" : p.status === "completed" ? "gray" : "amber"}>{p.status}</Badge>
+                  <Badge tone={p.status === "active" ? "leaf" : p.status === "completed" ? "gray" : "amber"}>
+                    {PROJECT_STATUS_LABELS[p.status] ?? p.status}
+                  </Badge>
                   <Badge tone={p.visibility === "published" ? "green" : "demo"}>{p.visibility}</Badge>
                 </div>
                 <p className="text-xs text-charcoal-soft mt-1 line-clamp-1">{p.locality} · {p.description}</p>

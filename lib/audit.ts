@@ -6,6 +6,9 @@ export const AUDIT_ACTIONS = {
   logout: "auth.logout",
   requestCreated: "request.created",
   requestStatusChanged: "request.status_changed",
+  /** Staff-only note. Stored here (never in the status history, which the
+   *  resident tracking API exposes) so internal notes cannot leak to residents. */
+  requestInternalNote: "request.internal_note",
   recordCreated: "record.created",
   recordVerified: "record.verified",
   eventCreated: "event.created",

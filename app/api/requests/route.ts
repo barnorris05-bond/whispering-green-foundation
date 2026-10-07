@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { collectionRequestSchema } from "@/lib/domain";
+import { collectionRequestSchema } from "@/lib/schemas";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { generateReferenceCode } from "@/lib/format";
 import { saveUpload } from "@/lib/uploads";

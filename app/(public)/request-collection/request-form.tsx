@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { SubmitButton, useToast, Badge } from "@/components/ui";
+import { SubmitButton, useToast } from "@/components/ui";
 import { WASTE_CATEGORIES, CATEGORY_LABELS, UNITS, LOCALITIES } from "@/lib/domain";
-import { CheckCircle2, PartyPopper, Copy, ArrowRight } from "lucide-react";
+import { CheckCircle2, Copy, ArrowRight, ShieldCheck, Info, ClipboardCheck } from "lucide-react";
 
 type Mode = "form" | "confirmation";
 
@@ -38,75 +37,99 @@ export function RequestForm() {
     }
   }
 
-  function copyRef() {
-    navigator.clipboard?.writeText(refCode).then(() => {
+  async function copyRef() {
+    try {
+      await navigator.clipboard?.writeText(refCode);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    });
+      push("success", "Reference code copied.");
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Clipboard unavailable (older browser / denied permission) — the code is on screen.
+      push("info", "Select the code and copy it manually.");
+    }
   }
 
   if (mode === "confirmation") {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="text-center py-8"
-        role="status"
-      >
-        <div className="w-16 h-16 rounded-full bg-leaf-100 border border-leaf-300 flex items-center justify-center mx-auto">
-          <PartyPopper className="w-7 h-7 text-leaf-700" />
+      <div className="text-center py-6 animate-scale-in" role="status" aria-live="polite">
+        <div className="w-16 h-16 rounded-full bg-leaf-100 border border-leaf-300 flex items-center justify-center mx-auto animate-pop-in">
+          <ClipboardCheck className="w-8 h-8 text-leaf-700" />
         </div>
-        <h2 className="font-display text-2xl font-semibold text-charcoal mt-5">Request submitted!</h2>
-        <p className="text-sm text-charcoal-soft mt-2 max-w-md mx-auto">
-          Keep this reference code — it&apos;s the only way to track your request along with the contact you provided.
+        <h2 className="font-display text-2xl sm:text-3xl font-semibold text-charcoal mt-5">Request received</h2>
+        <p className="text-sm text-charcoal-soft mt-2.5 max-w-md mx-auto leading-relaxed">
+          Our team reviews every request before confirming a slot, so this is not an appointment yet.
         </p>
-        <div className="glass rounded-2xl px-6 py-5 mt-6 inline-flex flex-col items-center gap-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-charcoal-soft/70">Reference code</span>
-          <span className="font-display text-3xl font-semibold tracking-[0.12em] text-forest-800">{refCode}</span>
-          <button onClick={copyRef} className="btn btn-secondary btn-sm mt-1.5">
-            <Copy className="w-3.5 h-3.5" /> {copied ? "Copied!" : "Copy code"}
-          </button>
+
+        {/* The reference code is the single most important thing on this screen. */}
+        <div className="mt-7 rounded-2xl border-2 border-forest-200 bg-forest-50/70 px-6 py-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-forest-700">Your reference code</p>
+          <p className="font-display text-3xl sm:text-4xl font-semibold tracking-[0.12em] text-forest-900 mt-2.5 break-all">
+            {refCode}
+          </p>
+          <div className="flex flex-wrap justify-center gap-2.5 mt-5">
+            <button onClick={copyRef} className="btn btn-primary btn-sm">
+              {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? "Copied" : "Copy code"}
+            </button>
+            <Link href={`/track-request?code=${encodeURIComponent(refCode)}`} className="btn btn-secondary btn-sm">
+              Track this request <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <p className="text-xs text-forest-800/80 mt-4 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5" /> Save this reference number to track your request.
+          </p>
         </div>
-        <div className="flex flex-wrap justify-center gap-3 mt-8">
-          <Link href={`/track-request?code=${encodeURIComponent(refCode)}`} className="btn btn-primary">
-            Track this request <ArrowRight className="w-4 h-4" />
-          </Link>
+
+        <div className="text-left max-w-md mx-auto mt-7 rounded-xl border border-sage-200 bg-sage-50/70 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-charcoal-soft/80">What happens next</p>
+          <ol className="mt-2.5 space-y-1.5 text-sm text-charcoal-soft">
+            <li>1. A coordinator reviews your request.</li>
+            <li>2. You get a status update you can follow with your reference code.</li>
+            <li>3. Approved requests are given a collection date.</li>
+            <li>4. Collected waste is weighed and recorded — only verified records count publicly.</li>
+          </ol>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-3 mt-7">
           <button
-            className="btn btn-secondary"
+            className="btn btn-ghost btn-sm"
             onClick={() => {
               setMode("form");
               setRefCode("");
+              setErrors({});
             }}
           >
             Submit another request
           </button>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8" noValidate>
-      {/* section: who */}
+    <form onSubmit={onSubmit} className="space-y-9" noValidate>
+      {/* ------------------------------------------------------ contact details */}
       <fieldset>
-        <legend className="font-display text-lg font-semibold text-charcoal mb-4 pb-2 border-b border-sage-200 w-full">
-          1 · About you
+        <legend className="font-display text-lg font-semibold text-charcoal mb-1 w-full">
+          1 · Contact details
         </legend>
+        <p className="text-xs text-charcoal-soft/80 mb-4 pb-3 border-b border-sage-200">
+          Used only to confirm the collection — never shown on public pages.
+        </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <label htmlFor="r-name" className="label">Full name *</label>
-            <input id="r-name" name="name" className={`input ${errors.name ? "input-error" : ""}`} placeholder="e.g. A. resident of Vasai-West" required />
+            <input id="r-name" name="name" className={`input ${errors.name ? "input-error" : ""}`} placeholder="e.g. A. resident of Vasai-West" required autoComplete="name" />
             {errors.name && <p className="field-error">{errors.name}</p>}
           </div>
           <div>
             <label htmlFor="r-email" className="label">Email</label>
-            <input id="r-email" name="email" type="email" className={`input ${errors.email ? "input-error" : ""}`} placeholder="you@example.com" />
+            <input id="r-email" name="email" type="email" className={`input ${errors.email ? "input-error" : ""}`} placeholder="you@example.com" autoComplete="email" />
             {errors.email && <p className="field-error">{errors.email}</p>}
           </div>
           <div>
             <label htmlFor="r-phone" className="label">Phone</label>
-            <input id="r-phone" name="phone" type="tel" className={`input ${errors.phone ? "input-error" : ""}`} placeholder="+91 98XXX XXXXX" />
+            <input id="r-phone" name="phone" type="tel" className={`input ${errors.phone ? "input-error" : ""}`} placeholder="+91 98XXX XXXXX" autoComplete="tel" />
             {errors.phone && <p className="field-error">{errors.phone}</p>}
           </div>
           <p className="sm:col-span-2 text-xs text-charcoal-soft/80 -mt-1">
@@ -115,11 +138,45 @@ export function RequestForm() {
         </div>
       </fieldset>
 
-      {/* section: waste */}
+      {/* --------------------------------------------------------------- location */}
       <fieldset>
-        <legend className="font-display text-lg font-semibold text-charcoal mb-4 pb-2 border-b border-sage-200 w-full">
-          2 · The waste
+        <legend className="font-display text-lg font-semibold text-charcoal mb-1 w-full">
+          2 · Location
         </legend>
+        <p className="text-xs text-charcoal-soft/80 mb-4 pb-3 border-b border-sage-200">
+          The approximate area is enough to start; the detailed address stays private.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="r-locality" className="label">Locality / area *</label>
+            <input id="r-locality" name="locality" className={`input ${errors.locality ? "input-error" : ""}`} list="locality-list" placeholder="e.g. Bhabola" required />
+            <datalist id="locality-list">
+              {LOCALITIES.map((l) => <option key={l} value={l} />)}
+            </datalist>
+            {errors.locality && <p className="field-error">{errors.locality}</p>}
+            <p className="field-hint">Choose from the list or type your area in Vasai-West.</p>
+          </div>
+          <div className="sm:col-span-2">
+            <label htmlFor="r-address" className="label">Detailed address (optional · private)</label>
+            <textarea
+              id="r-address"
+              name="address"
+              className="input min-h-[4.5rem]"
+              placeholder="Building / lane / landmark — visible to staff only, never published."
+            />
+            <p className="field-hint">Private: staff-only, excluded from all public pages and APIs.</p>
+          </div>
+        </div>
+      </fieldset>
+
+      {/* ---------------------------------------------------------- waste details */}
+      <fieldset>
+        <legend className="font-display text-lg font-semibold text-charcoal mb-1 w-full">
+          3 · Waste details
+        </legend>
+        <p className="text-xs text-charcoal-soft/80 mb-4 pb-3 border-b border-sage-200">
+          Approximate details are fine — the team confirms the final weight at pickup.
+        </p>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="r-category" className="label">Waste category *</label>
@@ -155,45 +212,30 @@ export function RequestForm() {
         </div>
       </fieldset>
 
-      {/* section: where & when */}
+      {/* --------------------------------------------------- preferred collection */}
       <fieldset>
-        <legend className="font-display text-lg font-semibold text-charcoal mb-4 pb-2 border-b border-sage-200 w-full">
-          3 · Where &amp; when
+        <legend className="font-display text-lg font-semibold text-charcoal mb-1 w-full">
+          4 · Preferred collection
         </legend>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="r-locality" className="label">Locality / area *</label>
-            <input id="r-locality" name="locality" className={`input ${errors.locality ? "input-error" : ""}`} list="locality-list" placeholder="e.g. Bhabola" required />
-            <datalist id="locality-list">
-              {LOCALITIES.map((l) => <option key={l} value={l} />)}
-            </datalist>
-            {errors.locality && <p className="field-error">{errors.locality}</p>}
-            <p className="field-hint">Choose from the list or type your area in Vasai-West.</p>
-          </div>
-          <div>
-            <label htmlFor="r-date" className="label">Preferred date (optional)</label>
-            <input id="r-date" name="preferredDate" type="date" className={`input ${errors.preferredDate ? "input-error" : ""}`} />
-            {errors.preferredDate && <p className="field-error">{errors.preferredDate}</p>}
-            <p className="field-hint">Cannot be in the past. Final slot is confirmed by our team.</p>
-          </div>
-          <div className="sm:col-span-2">
-            <label htmlFor="r-address" className="label">Detailed address (optional · private)</label>
-            <textarea
-              id="r-address"
-              name="address"
-              className="input min-h-[4.5rem]"
-              placeholder="Building / lane / landmark — visible to staff only, never published."
-            />
-            <p className="field-hint">Private: staff-only, excluded from all public pages and APIs.</p>
-          </div>
+        <p className="text-xs text-charcoal-soft/80 mb-4 pb-3 border-b border-sage-200">
+          Optional — the team confirms the final slot with you.
+        </p>
+        <div className="sm:max-w-xs">
+          <label htmlFor="r-date" className="label">Preferred date</label>
+          <input id="r-date" name="preferredDate" type="date" className={`input ${errors.preferredDate ? "input-error" : ""}`} />
+          {errors.preferredDate && <p className="field-error">{errors.preferredDate}</p>}
+          <p className="field-hint">Cannot be in the past.</p>
         </div>
       </fieldset>
 
-      {/* section: photo & consent */}
+      {/* -------------------------------------------------- additional information */}
       <fieldset>
-        <legend className="font-display text-lg font-semibold text-charcoal mb-4 pb-2 border-b border-sage-200 w-full">
-          4 · Photo &amp; confirmation
+        <legend className="font-display text-lg font-semibold text-charcoal mb-1 w-full">
+          5 · Additional information
         </legend>
+        <p className="text-xs text-charcoal-soft/80 mb-4 pb-3 border-b border-sage-200">
+          A photo helps the team plan the pickup — it is entirely optional.
+        </p>
         <div className="space-y-4">
           <div>
             <label htmlFor="r-photo" className="label">Photo of the waste (optional)</label>
@@ -222,9 +264,25 @@ export function RequestForm() {
         </div>
       </fieldset>
 
-      <div className="flex flex-col sm:flex-row gap-3 pt-2">
-        <SubmitButton className="flex-1" pendingLabel="Submitting…">Submit collection request</SubmitButton>
-        <button type="reset" className="btn btn-secondary">Clear form</button>
+      <div className="pt-1">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <SubmitButton className="flex-1" pendingLabel="Submitting…">Submit collection request</SubmitButton>
+          <button
+            type="reset"
+            className="btn btn-secondary"
+            onClick={() => setErrors({})}
+          >
+            Clear form
+          </button>
+        </div>
+        <p className="text-xs text-charcoal-soft/80 mt-4 flex items-start gap-2">
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-forest-600" />
+          <span>
+            You&apos;ll get a <strong className="text-charcoal">reference code</strong> straight away. Keep it — it is how
+            you follow your request.{" "}
+            <Link href="/track-request" className="text-forest-700 underline underline-offset-2">Already submitted? Track it here</Link>.
+          </span>
+        </p>
       </div>
     </form>
   );

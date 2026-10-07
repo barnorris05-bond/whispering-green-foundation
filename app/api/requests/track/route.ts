@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { trackSchema } from "@/lib/domain";
+import { trackSchema } from "@/lib/schemas";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { PUBLIC_STATUS_LABELS } from "@/lib/domain";
 import { toDateInput } from "@/lib/format";

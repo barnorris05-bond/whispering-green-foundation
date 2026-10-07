@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+import { absoluteUrl } from "@/lib/site";
 import { Badge, Breadcrumbs } from "@/components/ui";
 import { EventRegisterForm } from "./register-form";
 import { CalendarDays, MapPin, Clock, Users, Info } from "lucide-react";
@@ -11,8 +12,13 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const event = await prisma.event.findUnique({ where: { slug } });
-  if (!event || event.status === "draft") return { title: "Event" };
-  return { title: event.title, description: event.description.slice(0, 150) };
+  if (!event || event.status === "draft") return { title: "Event", robots: { index: false, follow: false } };
+  return {
+    title: event.title,
+    description: event.description.slice(0, 150),
+    alternates: { canonical: absoluteUrl(`/events/${event.slug}`) },
+    openGraph: { title: event.title, description: event.description.slice(0, 150), type: "article" },
+  };
 }
 
 export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {

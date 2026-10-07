@@ -77,15 +77,16 @@ export function RequestStatusPanel({
     return addInternalNote(prev, fd);
   }, { ok: false });
 
+  // `push` is a stable useCallback from the toast provider, so it is safe here.
   useEffect(() => {
     if (state.message) push("success", state.message);
     if (state.error) push("error", state.error);
-  }, [state]);
+  }, [state, push]);
 
   useEffect(() => {
     if (noteState.message) push("success", noteState.message);
     if (noteState.error) push("error", noteState.error);
-  }, [noteState]);
+  }, [noteState, push]);
 
   const needsReason = (s: string) => s === "rejected" || s === "cancelled";
 
@@ -99,7 +100,7 @@ export function RequestStatusPanel({
             final state with no further transitions. If it was rejected or cancelled by mistake, the resident can submit a new request.
           </p>
         </div>
-        <NoteForm noteState={noteState} noteAction={noteAction} requestId={requestId} />
+        <NoteForm noteAction={noteAction} requestId={requestId} />
       </div>
     );
   }
@@ -202,13 +203,13 @@ export function RequestStatusPanel({
       </div>
 
       <div className="border-t border-sage-200 pt-5">
-        <NoteForm noteState={noteState} noteAction={noteAction} requestId={requestId} />
+        <NoteForm noteAction={noteAction} requestId={requestId} />
       </div>
     </div>
   );
 }
 
-function NoteForm({ noteState, noteAction, requestId }: { noteState: State; noteAction: (fd: FormData) => void; requestId: string }) {
+function NoteForm({ noteAction, requestId }: { noteAction: (fd: FormData) => void; requestId: string }) {
   return (
     <form action={noteAction} className="space-y-3">
       <h3 className="font-semibold text-charcoal mb-1 flex items-center gap-2 text-sm">

@@ -1,6 +1,67 @@
 # PROJECT_STATUS.md — Whispering Green Foundation MVP
 
-Last updated: final completion & QA pass (24 Sept 2026). Prior passes intact — logo/hydration fix preserved (`nestedAnchorCount = 0`).
+Last updated: final product polish, content & performance pass (25 Sept 2026). Prior passes intact — logo/hydration fix preserved (`nestedAnchorCount = 0`), date-only helpers still used everywhere, verified-only impact rule unchanged.
+
+## Final product polish, content & performance pass (25 Sept 2026)
+
+Scope: codebase audit, a new **Foundation Journey** page, homepage/hero and page-by-page polish, one consistent CSS animation system, per-route loading states, SEO/accessibility/responsive work, and a major performance pass. No workflow was changed, no database schema was changed, and no existing QA data was destroyed.
+
+### Added
+
+1. **`/journey` — Foundation Journey.** A chronological storytelling page: hero, "Where it began" + a *From the Founder* card, an alternating (desktop) / single-column (mobile) timeline with a connecting rail, six activity strands, a "where we are today" section that deliberately separates *foundation activities* / *verified impact data* / *website functionality*, and "The Next Chapter" with existing-route CTAs. It is linked from the primary nav ("Our Journey"), the footer, the About page and a homepage band.
+2. **Truthful content structure.** All narrative copy lives in `lib/journey.ts` (`JOURNEY_ERAS`, `JOURNEY_PILLARS`, `JOURNEY_TODAY`, `JOURNEY_NEXT`). Anything we cannot verify is written in `[square brackets]` with `source: "placeholder"`, which renders a visible **“Awaiting foundation input”** badge; the two unverifiable eras carry it today.
+3. **Founder note via the existing admin content system.** A new content category, `founder_note` ("Founder's story (Foundation Journey)"), is authored in **Admin → Awareness content** and appears automatically in the *From the Founder* card. It is filtered out of the awareness portal, `/awareness/<slug>`, the homepage article list and `sitemap.xml` (`AWARENESS_CATEGORIES` / `JOURNEY_CONTENT_CATEGORY` in `lib/domain.ts`). Verified: published note → visible on `/journey`, absent everywhere else, `/awareness/<slug>` → 404, not in the sitemap. The founder's story is never invented — the empty state says so explicitly.
+4. **Consistent animation system (CSS-first).** `Reveal` was rewritten as a progressive-enhancement IntersectionObserver component: content is **visible by default in the server HTML** (no JavaScript required), only below-the-fold elements are hidden after mount, and `prefers-reduced-motion` skips it entirely. Framer Motion was removed from `components/ui.tsx`, `public-header.tsx`, `page-transition.tsx`, `request-form.tsx`, `track-client.tsx` and `gallery-grid.tsx` — it is now used **only** in the admin shell. Reduced-motion handling was extended (hover transforms disabled, delays zeroed, reveal states forced visible).
+5. **Per-route loading skeletons.** `journey`, `initiatives`, `gallery`, `awareness`, `events` (list routes) plus `admin`, `admin/requests`, `admin/collections`, `admin/content`, `admin/gallery`, `admin/volunteers`, sharing `components/skeletons.tsx`.
+6. **SEO.** `metadataBase` + site-level Open Graph/Twitter defaults, a generated `opengraph-image` (text/shapes only, no invented logo), per-page canonical + OG metadata, dynamic `sitemap.xml` entries for published projects/events/articles (with a DB-outage fallback), `/login` added to `robots.txt` disallow and removed from the sitemap, and admin pages given their own title template.
+7. **Accessibility.** A "Skip to content" link, `Breadcrumbs` now uses `next/link` (client navigation, was a full page reload), `ConfirmDialog` gained Escape handling, a light-on-dark focus ring for the footer/dark panels, `[id]` scroll-margin so hash links clear the sticky header, and the toast close button is now a proper padded hit target.
+8. **Media.** New `components/media-image.tsx`: raster uploads go through `next/image` (responsive `sizes`, WebP, lazy) while the local SVG artwork stays a plain `<img>` (the optimizer refuses SVG by design). The gallery moved from a masonry column layout to a uniform 4:3 responsive grid — matching the shipped artwork exactly and removing all layout shift.
+9. **Shared skeleton/util de-duplication:** `PROJECT_CATEGORIES` / `PROJECT_CATEGORY_LABELS` / `PROJECT_STATUS_LABELS`, `AWARENESS_CATEGORIES`, `lib/site.ts`, `lib/schemas.ts`, `components/skeletons.tsx`, `components/media-image.tsx`.
+
+### Bugs found and fixed
+
+1. **Staff-only note leaked to residents (privacy).** `addInternalNote` wrote the note into `RequestStatusHistory`, and the tracking API publishes *every* history entry carrying a note — so a note labelled "Visible to staff only…" appeared in the resident's timeline. Internal notes are now stored in the staff-only `AuditLog` (`request.internal_note`) and rendered in a new *Internal notes* card on the admin request detail page. Verified: the note is saved, visible to staff, and absent from the tracking payload. (Filtering by `oldStatus === newStatus` would have been wrong — legitimate reschedule notes share that shape.)
+2. **Route-level `loading.tsx` broke 404s.** Adding `loading.tsx` to a route makes Next stream the shell, after which `notFound()` can only produce a **soft 404 (HTTP 200)**. `/awareness/<missing>`, `/events/<missing>` and `/projects/<missing>` all returned 200. Fixed by removing those boundaries and scoping the list-page skeletons inside `(index)` route groups; all three now return real 404s again while `/awareness` and `/events` keep their loading states.
+3. **Project categories were labelled with the waste-category map.** `CATEGORY_LABELS` (plastic/dry recyclable/…) was used for project categories, so `/projects/<slug>` and the homepage rendered the raw column value (`waste`). Two divergent copies existed (a local `CATEGORY_UI` map in `initiatives/page.tsx`). Replaced with one shared `PROJECT_CATEGORY_LABELS` used by the listing, the detail page, the homepage and the admin managers.
+4. **Homepage title duplicated the site name** (`… — Community waste action in Vasai-West · Whispering Green Foundation`). The root title template now applies everywhere except the homepage, which opts out with `title: { absolute }`.
+5. **~97 kB of zod shipped to the browser.** `lib/domain.ts` mixed plain constants (imported by client components) with zod schemas, so the request form, tracking page and several admin pages bundled the whole validation library. Schemas moved to `lib/schemas.ts` (server-only importers).
+6. **Dead code removed:** the unused `CountUp` component and `publicRequestView` helper, an unused `noteState` prop, and every unused import — `npm run lint` went from **37 warnings to 0**.
+7. Small polish fixes: mobile timeline dot centred on the rail (was 2px off), `aria-current` retained on nav links, gallery lightbox prev/next now disabled at the ends, the request form's success screen leads with the reference code and an explicit "Save this reference number to track your request", and the events/awareness/homepage cards gained the same hover affordance.
+
+### Performance results (production build, First Load JS)
+
+| Route | Before | After |
+| --- | --- | --- |
+| `/request-collection` | 245 kB | **148 kB** |
+| `/track-request` | 244 kB | **147 kB** |
+| `/admin/collections` | 289 kB | **192 kB** |
+| `/admin/content` | 289 kB | **192 kB** |
+| `/admin/projects` | 289 kB | **192 kB** |
+| `/admin/requests/[id]` | 290 kB | **193 kB** |
+| Public content pages (`/`, `/about`, `/journey`, `/awareness`, `/events`, `/initiatives`) | 143 kB | 143 kB (shared) |
+
+Cause of the reductions: the zod split above, `next/dynamic` for the recharts dashboard chart (its own chunk, loaded after the page is interactive), and framer-motion no longer being part of the public shell. Other work: `select`-scoped Prisma queries (homepage projects/articles, initiatives list), `Promise.all` in the admin request detail (events + internal notes), and `priority` reserved for the header logo only.
+
+### Verified this pass
+
+- `/journey` at 1280/1024/768/375/1440: no horizontal overflow, rail perfectly centred (712 = layout centre at 1440), cards alternate, all 24 reveals resolve to visible after scrolling, **0 `data-reveal` attributes in the server HTML** (so the page reads fully without JavaScript).
+- Responsive sweep 375/390/768/883/1024/1280/1440: no page-level horizontal overflow on `/`, `/journey`, `/gallery`, `/request-collection`, `/admin`, `/admin/requests`; admin tables scroll internally (325px client vs 613px content at 375px); request form touch targets ≥ 44px; admin dashboard chart card 326px wide at 375px.
+- Functional regression on a fresh request `WGF-AM4J-FC3A`: submit through the real form → reference code + confirmation → track (public payload has no name/email/address; wrong contact → 404) → staff *Start review* → *Approve* → *Schedule* (2026-11-20, stored as 2026-11-19T18:30Z = correct local date) → internal note → *Start collection* → *Mark completed*.
+- Impact integrity: homepage **55 kg / 2 verified** exactly matches the database. Adding a **draft** 9.5 kg record left it at 55 kg; verifying it moved homepage and journey to 64.5 kg / 3; deleting it restored 55 kg / 2. `/journey` shows the same live figure.
+- Security: unauth `/admin` → 307, unauth resident-photo route → 401, unauth CSV export → 401, malformed track body → 400, invalid request submission → 400, `.env` and `uploads/` untracked.
+- 22 unique internal links across 10 public pages, **0 broken**. All 14 public routes + 3 detail routes + `robots.txt`/`sitemap.xml`/`icon.png`/`opengraph-image` return 200.
+- `npm run lint` → **0 errors, 0 warnings**; `npx tsc --noEmit` → clean; `npm run build` → succeeds, migrations up to date, 20 static pages generated.
+
+### Disclosed test data (this pass)
+
+One new collection request `WGF-AM4J-FC3A` (Chulne, dry recyclable, 6 kg) now exists as **completed** with history and one staff-only internal note; it is not counted in public impact (no collection record). The temporary founder-note article, the temporary draft 9.5 kg record and the temporary media/PNG fixture used to verify `next/image` were all deleted afterwards. Media rows remain at 6 and content rows at 6.
+
+### Notes / deliberate limitations
+
+- Local builds print `metadataBase … is not set` — intentional: with no `NEXT_PUBLIC_SITE_URL` and no Vercel origin, no absolute canonical/OG URL is emitted rather than a wrong one. On Vercel the platform origin is used automatically; set `NEXT_PUBLIC_SITE_URL` once a custom domain exists.
+- The full status history is still exposed to the resident (correct — it is the resident's own request), but it now contains only resident-readable notes.
+- Public DB-backed pages remain `force-dynamic`. ISR/revalidation was deliberately **not** introduced: the verified-impact rule and the request/tracking flows are correctness-critical, and caching them could show stale figures. This is the largest remaining server-side performance opportunity.
+- Detail routes intentionally have no `loading.tsx` (see bug 2) — the list routes carry the skeletons.
 
 ## Final completion & QA pass (24 Sept 2026)
 
@@ -70,7 +131,7 @@ Improvements driven by the website review checklist:
 | Prisma 6 + PostgreSQL (Neon), migration + indexes + unique constraints | 🧪 | pooled `DATABASE_URL` + direct `DIRECT_URL`; `npm run build` runs `prisma migrate deploy` |
 | Auth: scrypt hashes, DB sessions, httpOnly cookies, roles | 🧪 | founder/staff; rate-limited login |
 | Middleware gate + server-side action guards + audit log | 🧪 | unauth `/admin` → 307; unauth actions → error |
-| Public site (12 routes) + admin (11 routes) | 🧪 | all return 200 authenticated; 404 page; error boundary |
+| Public site (14 routes incl. `/journey`) + admin (11 routes) | 🧪 | all return 200 authenticated; real 404s on missing slugs; 404 page; error boundary |
 | Design system: eco palette, glass accents, motion primitives | 🧪 | reduced-motion respected via CSS |
 | Responsive mobile nav, drawers, tables | 🧪 | manual review; horizontal-scroll tables |
 | Seed script (demo + logbook data, labelled) | 🧪 | idempotent, re-runnable |
@@ -101,6 +162,10 @@ Improvements driven by the website review checklist:
 | 18 | CSV export requires auth | ✅ |
 | 19 | Homepage impact = verified kg-only sum (55 kg / 2 records after the 24 Sept pass) | ✅ |
 | 20 | `tsc --noEmit` and `next build` clean | ✅ |
+| 21 | `/journey` renders timeline + placeholders, no JS required (0 `data-reveal` in server HTML) | ✅ (25 Sept pass) |
+| 22 | Founder note published via Admin → Content appears on `/journey` only (not awareness, homepage, sitemap) | ✅ (25 Sept pass) |
+| 23 | Staff-only internal notes never appear in the resident tracking payload | ✅ (25 Sept pass) |
+| 24 | `loading.tsx` boundaries do not soften 404s (`/awareness`, `/events`, `/projects` missing slugs → 404) | ✅ (25 Sept pass) |
 
 ## Deferred (documented, non-blocking)
 

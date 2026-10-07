@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, hashPassword, verifyPassword } from "@/lib/auth";
 import { STATUS_TRANSITIONS } from "@/lib/domain";
-import { createHistory } from "@/lib/requests";
 import { audit, AUDIT_ACTIONS } from "@/lib/audit";
 import { saveUpload } from "@/lib/uploads";
 import { slugify } from "@/lib/format";
@@ -99,13 +98,19 @@ export async function addInternalNote(_prev: ActionState, formData: FormData): P
   const requestId = String(formData.get("requestId") ?? "");
   const note = String(formData.get("note") ?? "").trim();
   if (!note) return { ok: false, error: "Note cannot be empty." };
-  const request = await prisma.collectionRequest.findUnique({ where: { id: requestId } });
+  if (note.length > 2000) return { ok: false, error: "Keep internal notes under 2000 characters." };
+  const request = await prisma.collectionRequest.findUnique({ where: { id: requestId }, select: { id: true } });
   if (!request) return { ok: false, error: "Request not found." };
-  await prisma.requestStatusHistory.create({
-    data: { requestId, oldStatus: request.status, newStatus: request.status, changedBy: user.id, note },
-  });
+
+  // IMPORTANT: internal notes go to the staff-only audit log, never to
+  // RequestStatusHistory. The resident tracking API publishes every history
+  // entry that carries a note, so a history row here would leak the note to
+  // the resident — see PROJECT_STATUS.md.
+  await audit(user, AUDIT_ACTIONS.requestInternalNote, "CollectionRequest", requestId, { note });
+
   revalidatePath("/admin/requests");
-  return { ok: true, message: "Note added to history." };
+  revalidatePath(`/admin/requests/${requestId}`);
+  return { ok: true, message: "Internal note saved (staff only)." };
 }
 
 /* ------------------------------------------------------ collection records */
@@ -311,7 +316,6 @@ const projectSchema = z.object({
 export async function upsertProject(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const guard = await staffGuard();
   if (guard.error) return guard.error;
-  const user = guard.user!;
   const parsed = projectSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};

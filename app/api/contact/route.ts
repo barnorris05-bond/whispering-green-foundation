@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { contactMessageSchema } from "@/lib/domain";
+import { contactMessageSchema } from "@/lib/schemas";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {

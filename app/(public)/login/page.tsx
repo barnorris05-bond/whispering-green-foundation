@@ -8,6 +8,8 @@ import { ShieldCheck } from "lucide-react";
 export const metadata: Metadata = {
   title: "Staff Login",
   description: "Sign in to the Whispering Green Foundation staff dashboard.",
+  // A staff sign-in page has no search value and should never rank.
+  robots: { index: false, follow: false },
 };
 
 export default function LoginPage() {

@@ -2,20 +2,32 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { formatIN, formatDate } from "@/lib/format";
-import { CATEGORY_LABELS } from "@/lib/domain";
+import { CONTENT_CATEGORY_LABELS, JOURNEY_CONTENT_CATEGORY, PROJECT_CATEGORY_LABELS } from "@/lib/domain";
+import { absoluteUrl } from "@/lib/site";
 import { Reveal, SectionHeading, Badge, EmptyState } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
+import { JOURNEY_ERAS } from "@/lib/journey";
 import {
   Recycle, ClipboardList, Truck, PartyPopper, ArrowRight, CalendarDays,
-  BookOpen, Users, ShieldCheck, MapPin, Leaf, HandHeart, Info, PackageSearch,
+  BookOpen, Users, ShieldCheck, MapPin, Leaf, HandHeart, Info, PackageSearch, Compass,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Whispering Green Foundation — Community waste action in Vasai-West",
+  // `absolute` opts out of the root title template — otherwise the site name
+  // would be appended twice on the homepage.
+  title: { absolute: "Whispering Green Foundation — Community waste action in Vasai-West" },
   description:
     "Request a household waste collection, join clean-up events, and learn practical waste habits with Whispering Green Foundation in Vasai-West.",
+  alternates: { canonical: absoluteUrl("/") },
+  openGraph: {
+    title: "Whispering Green Foundation — Community waste action in Vasai-West",
+    description:
+      "Household waste collection, community clean-up events and practical awareness work in Vasai-West — with impact figures published only from verified records.",
+    url: absoluteUrl("/"),
+    type: "website",
+  },
 };
 
 async function getHomeData() {
@@ -31,14 +43,18 @@ async function getHomeData() {
         take: 3,
       }),
       prisma.content.findMany({
-        where: { status: "published" },
+        // Exclude the founder's Journey note — it is not awareness content.
+        where: { status: "published", category: { not: JOURNEY_CONTENT_CATEGORY } },
         orderBy: { publishedAt: "desc" },
         take: 3,
+        select: { id: true, title: true, slug: true, category: true, excerpt: true, readMinutes: true },
       }),
       prisma.project.findMany({
         where: { visibility: "published" },
         orderBy: { updatedAt: "desc" },
         take: 3,
+        // Card summary only — never pull the full project record onto the homepage.
+        select: { id: true, slug: true, title: true, description: true, category: true, locality: true },
       }),
     ]);
     return { verified, events, articles, projects, ok: true as const };
@@ -90,72 +106,82 @@ export default async function HomePage() {
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20 lg:pt-24 lg:pb-28 grid lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center">
+          {/* The heading and lead paragraph deliberately carry no entrance animation:
+              they are the largest contentful paint, so they must paint immediately
+              and must never depend on JavaScript to become visible. */}
           <div>
-            <Reveal>
-              <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-wide uppercase bg-white border border-forest-100 text-forest-700 rounded-full px-3.5 py-1.5 shadow-soft">
-                <Leaf className="w-3.5 h-3.5 text-leaf-600" />
-                Community waste action · Vasai-West
-              </span>
-            </Reveal>
-            <Reveal delay={0.08}>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.4rem] font-semibold text-forest-950 leading-[1.08] tracking-tight mt-5">
-                Greener streets begin with{" "}
-                <span className="relative inline-block">
-                  <span className="relative z-10">one pickup</span>
-                  <svg aria-hidden viewBox="0 0 220 12" className="absolute -bottom-1 left-0 w-full h-3 text-leaf-400/70" preserveAspectRatio="none">
-                    <path d="M3 9C60 3 160 3 217 8" stroke="currentColor" strokeWidth="5" fill="none" strokeLinecap="round" />
-                  </svg>
-                </span>{" "}
-                at a time
-              </h1>
-            </Reveal>
-            <Reveal delay={0.16}>
-              <p className="text-lg text-charcoal-soft leading-relaxed mt-6 max-w-xl">
-                Whispering Green Foundation helps Vasai-West households get dry and plastic waste collected
-                responsibly — and turns every verified kilogram into visible community impact.
-              </p>
-              <p className="text-sm text-charcoal-soft/80 leading-relaxed mt-3 max-w-xl flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-forest-600 shrink-0 mt-0.5" />
-                <span>
-                  Every published figure is traced to a verified weighing record. Our current collection work is run
-                  by a student team as part of their CEP Phase II (Eco Engineering) project —{" "}
-                  <Link href="/about" className="text-forest-700 underline underline-offset-2 hover:text-forest-800">read how our numbers are made</Link>.
-                </span>
-              </p>
-            </Reveal>
-            <Reveal delay={0.24}>
-              <div className="flex flex-wrap gap-3 mt-8">
-                <Link href="/request-collection" className="btn btn-primary btn-lg">
-                  <HandHeart className="w-5 h-5" /> Request a collection
-                </Link>
-                <Link href="/initiatives" className="btn btn-secondary btn-lg">
-                  Explore initiatives <ArrowRight className="w-4.5 h-4.5" />
-                </Link>
-                <Link href="/events" className="btn btn-ghost btn-lg">
-                  <CalendarDays className="w-5 h-5 text-forest-600" /> Join an event
-                </Link>
-              </div>
-            </Reveal>
+            <span className="animate-fade-in inline-flex items-center gap-2 text-xs font-semibold tracking-wide uppercase bg-white border border-forest-100 text-forest-700 rounded-full px-3.5 py-1.5 shadow-soft">
+              <Leaf className="w-3.5 h-3.5 text-leaf-600" />
+              Whispering Green Foundation · Vasai-West
+            </span>
 
-            <Reveal delay={0.32}>
-              <div className="mt-12 pt-8 border-t border-forest-100">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-charcoal-soft/70 mb-4">What would you like to do?</p>
-                <div className="flex flex-wrap gap-2.5">
-                  <Link href="/request-collection" className="chip-link">
-                    <HandHeart className="w-4 h-4 text-forest-600" /> Book a household pickup
-                  </Link>
-                  <Link href="/track-request" className="chip-link">
-                    <PackageSearch className="w-4 h-4 text-forest-600" /> Track my request
-                  </Link>
-                  <Link href="/events" className="chip-link">
-                    <Users className="w-4 h-4 text-forest-600" /> Volunteer at a drive
-                  </Link>
-                  <Link href="/awareness" className="chip-link">
-                    <BookOpen className="w-4 h-4 text-forest-600" /> Learn waste habits
-                  </Link>
-                </div>
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.4rem] font-semibold text-forest-950 leading-[1.08] tracking-tight mt-5">
+              Greener streets begin with{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10">one pickup</span>
+                <svg aria-hidden viewBox="0 0 220 12" className="absolute -bottom-1 left-0 w-full h-3 text-leaf-400/70" preserveAspectRatio="none">
+                  <path d="M3 9C60 3 160 3 217 8" stroke="currentColor" strokeWidth="5" fill="none" strokeLinecap="round" />
+                </svg>
+              </span>{" "}
+              at a time
+            </h1>
+
+            <p className="text-lg text-charcoal-soft leading-relaxed mt-6 max-w-xl">
+              We help Vasai-West households get dry and plastic waste collected responsibly — and turn every
+              verified kilogram into visible community impact.
+            </p>
+
+            {/* The four strands of the foundation's work, stated before any scrolling. */}
+            <ul
+              className="animate-fade-in flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-6 text-sm text-forest-800"
+              style={{ animationDelay: "80ms" }}
+            >
+              {["Community", "Environment", "Waste management", "Awareness"].map((theme, i) => (
+                <li key={theme} className="flex items-center gap-3">
+                  {i > 0 && <span aria-hidden className="w-1 h-1 rounded-full bg-leaf-400" />}
+                  <span className="font-medium">{theme}</span>
+                </li>
+              ))}
+            </ul>
+
+            <p className="text-sm text-charcoal-soft/80 leading-relaxed mt-5 max-w-xl flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-forest-600 shrink-0 mt-0.5" />
+              <span>
+                Every published figure is traced to a verified weighing record. Our current collection work is run
+                by a student team as part of their CEP Phase II (Eco Engineering) project —{" "}
+                <Link href="/about" className="text-forest-700 underline underline-offset-2 hover:text-forest-800">read how our numbers are made</Link>.
+              </span>
+            </p>
+
+            <div className="animate-fade-in flex flex-wrap gap-3 mt-8" style={{ animationDelay: "140ms" }}>
+              <Link href="/request-collection" className="btn btn-primary btn-lg">
+                <HandHeart className="w-5 h-5" /> Request a collection
+              </Link>
+              <Link href="/initiatives" className="btn btn-secondary btn-lg">
+                Explore initiatives <ArrowRight className="w-4.5 h-4.5" />
+              </Link>
+              <Link href="/journey" className="btn btn-ghost btn-lg">
+                <Compass className="w-5 h-5 text-forest-600" /> Our journey
+              </Link>
+            </div>
+
+            <div className="mt-12 pt-8 border-t border-forest-100">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-charcoal-soft/70 mb-4">What would you like to do?</p>
+              <div className="flex flex-wrap gap-2.5">
+                <Link href="/request-collection" className="chip-link">
+                  <HandHeart className="w-4 h-4 text-forest-600" /> Book a household pickup
+                </Link>
+                <Link href="/track-request" className="chip-link">
+                  <PackageSearch className="w-4 h-4 text-forest-600" /> Track my request
+                </Link>
+                <Link href="/events" className="chip-link">
+                  <Users className="w-4 h-4 text-forest-600" /> Volunteer at a drive
+                </Link>
+                <Link href="/awareness" className="chip-link">
+                  <BookOpen className="w-4 h-4 text-forest-600" /> Learn waste habits
+                </Link>
               </div>
-            </Reveal>
+            </div>
           </div>
 
           {/* hero visual */}
@@ -233,6 +259,50 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* -------------------------------------------------------------- journey */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-20 sm:mt-24">
+        <Reveal>
+          <div className="card overflow-hidden">
+            <div className="grid lg:grid-cols-[1.05fr_1fr]">
+              <div className="p-8 sm:p-10">
+                <span className="inline-block text-xs font-semibold tracking-[0.14em] uppercase text-forest-600 bg-forest-50 border border-forest-100 rounded-full px-3 py-1">
+                  Foundation Journey
+                </span>
+                <h2 className="font-display text-2xl sm:text-3xl font-semibold text-charcoal tracking-tight mt-4">
+                  The story behind the collection rounds
+                </h2>
+                <p className="text-charcoal-soft leading-relaxed mt-3.5 text-[0.95rem]">
+                  How the foundation began, how the work grew, and where it goes next — told honestly, with clearly
+                  marked placeholders wherever our records are still incomplete.
+                </p>
+                <Link href="/journey" className="btn btn-primary mt-7">
+                  <Compass className="w-4.5 h-4.5" /> Read our journey
+                </Link>
+              </div>
+              <div className="relative bg-forest-900 text-forest-50 p-8 sm:p-10">
+                <div aria-hidden className="absolute inset-0 opacity-[0.06]">
+                  <LeafPattern dense />
+                </div>
+                <ol className="relative">
+                  <div aria-hidden className="timeline-rail absolute left-[5px] top-2 bottom-2 w-px opacity-40" />
+                  {JOURNEY_ERAS.map((era) => (
+                    <li key={era.id} className="relative pl-6 pb-6 last:pb-0">
+                      <span
+                        aria-hidden
+                        className="absolute left-0 top-1.5 w-[11px] h-[11px] rounded-full border-2 border-forest-900 bg-leaf-400"
+                      />
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-leaf-300">{era.period}</p>
+                      <p className="text-sm font-medium mt-1">{era.title}</p>
+                      <p className="text-xs text-forest-200/70 mt-0.5 leading-relaxed line-clamp-2">{era.summary}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
       {/* ------------------------------------------------------------- projects */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-20 sm:mt-24">
         <Reveal>
@@ -249,9 +319,9 @@ export default async function HomePage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {projects.map((p, i) => (
               <Reveal key={p.id} delay={i * 0.07}>
-                <Link href={`/projects/${p.slug}`} className="card card-hover block p-6 h-full">
-                  <Badge tone="green">{CATEGORY_LABELS[p.category] ?? p.category}</Badge>
-                  <h3 className="font-display text-lg font-semibold text-charcoal mt-3">{p.title}</h3>
+                <Link href={`/projects/${p.slug}`} className="card card-hover block p-6 h-full group">
+                  <Badge tone="green">{PROJECT_CATEGORY_LABELS[p.category] ?? p.category}</Badge>
+                  <h3 className="font-display text-lg font-semibold text-charcoal mt-3 group-hover:text-forest-700 transition-colors">{p.title}</h3>
                   <p className="text-sm text-charcoal-soft mt-2 line-clamp-3">{p.description}</p>
                   <p className="flex items-center gap-1.5 text-xs text-charcoal-soft/75 mt-4">
                     <MapPin className="w-3.5 h-3.5" /> {p.locality}
@@ -284,13 +354,13 @@ export default async function HomePage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {events.map((e, i) => (
               <Reveal key={e.id} delay={i * 0.07}>
-                <Link href={`/events/${e.slug}`} className="card card-hover block p-6 h-full">
+                <Link href={`/events/${e.slug}`} className="card card-hover block p-6 h-full group">
                   <div className="flex items-center gap-2 text-xs text-forest-700 font-medium">
                     <CalendarDays className="w-3.5 h-3.5" />
                     {formatDate(e.eventDate)}
                     {e.startTime && <span className="text-charcoal-soft/70">· {e.startTime}</span>}
                   </div>
-                  <h3 className="font-display text-lg font-semibold text-charcoal mt-2.5">{e.title}</h3>
+                  <h3 className="font-display text-lg font-semibold text-charcoal mt-2.5 group-hover:text-forest-700 transition-colors">{e.title}</h3>
                   <p className="text-sm text-charcoal-soft mt-1.5 line-clamp-2">{e.description}</p>
                   <p className="flex items-center gap-1.5 text-xs text-charcoal-soft/75 mt-4">
                     <MapPin className="w-3.5 h-3.5" /> {e.locality}
@@ -322,9 +392,9 @@ export default async function HomePage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {articles.map((a, i) => (
               <Reveal key={a.id} delay={i * 0.07}>
-                <Link href={`/awareness/${a.slug}`} className="card card-hover block p-6 h-full">
-                  <Badge tone="leaf">{a.category.replace(/_/g, " ")}</Badge>
-                  <h3 className="font-display text-lg font-semibold text-charcoal mt-3">{a.title}</h3>
+                <Link href={`/awareness/${a.slug}`} className="card card-hover block p-6 h-full group">
+                  <Badge tone="leaf">{CONTENT_CATEGORY_LABELS[a.category] ?? a.category.replace(/_/g, " ")}</Badge>
+                  <h3 className="font-display text-lg font-semibold text-charcoal mt-3 group-hover:text-forest-700 transition-colors">{a.title}</h3>
                   <p className="text-sm text-charcoal-soft mt-2 line-clamp-2">{a.excerpt}</p>
                   <p className="text-xs text-charcoal-soft/70 mt-4">{a.readMinutes} min read</p>
                 </Link>
