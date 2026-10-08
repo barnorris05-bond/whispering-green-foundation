@@ -1,6 +1,46 @@
 # PROJECT_STATUS.md — Whispering Green Foundation MVP
 
-Last updated: final product polish, content & performance pass (25 Sept 2026). Prior passes intact — logo/hydration fix preserved (`nestedAnchorCount = 0`), date-only helpers still used everywhere, verified-only impact rule unchanged.
+Last updated: Final QA + founder-ready pass (8 Oct 2026) — responsive nav bug fixed, full route matrix verified, build clean. Prior passes intact.
+
+## Final QA + Founder-Ready Pass (8 Oct 2026)
+
+Scope: final verification of all public routes, Events removal, navigation responsive fix, security, donation page, API validation, SEO, and build quality. No features added, no schema changed, no data modified.
+
+### Fix applied
+
+**1280px navigation hamburger bug (Tailwind v4 cascade issue).** The hamburger button used `lg:hidden btn btn-ghost btn-sm` and the mobile nav panel used `lg:hidden`. In Tailwind v4, unlayered CSS (the `.btn` class in `globals.css`) has higher cascade priority than utility classes, so `.btn { display: inline-flex }` overrode `lg:hidden { display: none }` — making the hamburger visible at desktop widths simultaneously with the desktop nav. Fixed by using `lg:!hidden` (Tailwind v4 important modifier) on both the hamburger button and the mobile nav panel, and `!hidden sm:!inline-flex` on the "Request collection" header link for the same reason.
+
+### Verified this pass
+
+- `/events` → 404; `/events/test` → 404 (real 404, not soft 200). ✅
+- Zero `/events`, "Upcoming Events", "Register for Event" or "event registration" references in any public page, header, footer, or sitemap. ✅
+- All 13 public routes return 200; `/projects` → 307 (redirect to `/initiatives`). ✅
+- `/projects/nonexistent-test-slug` → 404; `/awareness/nonexistent-test-slug` → 404 (real 404s). ✅
+- Sitemap contains `/journey`, `/donate`; contains no `/events` or `/admin` URLs. ✅
+- robots.txt disallows `/admin`, `/api/`, `/track-request`, `/login`. ✅
+- `/admin` unauthenticated → 307. `/api/media/file/[path]` unauthenticated → 401. ✅
+- `/api/requests` malformed → 400. `/api/requests/track` wrong contact → 404. ✅
+- `/api/contact` malformed → 400. `/api/admin/export/registrations` unauthenticated → 401. ✅
+- Donate page: heading "Donate by Bank Transfer", all bank fields correct, no Razorpay/Stripe/PayPal/UPI. ✅
+- Clipboard values confirmed: `501000000468191`, `BACB0000003`, `400238003` (no spaces). ✅
+- `npm run lint` → 0 errors, 0 warnings. ✅
+- `npx tsc --noEmit` → clean. ✅
+- `npm run build` → succeeds, 37 routes compiled, no `/events` public route in output. ✅
+- No new commits made; all changes remain in working tree. ✅
+
+### Test data / impact note (for founder review)
+
+The current displayed impact (visible on homepage and `/journey`) is sourced from verified collection records in the database. This includes a **42.5 kg "DEMO SAMPLE" verified record** seeded for pipeline testing, plus any records verified during QA passes. Founders should review **Admin → Collections** and decide whether to delete QA/demo records before presenting real impact figures. The unverified logbook records (500/350/220 kg from CEP Phase II) remain draft and do not contribute to public numbers until explicitly verified by staff.
+
+
+
+## Public Events removal (7 Oct 2026)
+
+The foundation decided the public Events/upcoming-events feature is no longer part of the website. What changed and what deliberately did not:
+
+- **Removed (public only):** the `/events` and `/events/[slug]` pages (with their loading state), the public volunteer-registration API (`/api/events/register`), the header/desktop+mobile Events buttons, both footer Events links, the homepage "Upcoming events" section and its impact stat (replaced by an honest **Published initiatives** count), the "Volunteer at a drive" quick link (now "Support our work" → `/donate`), the get-involved band's event-registration promise (now: request a collection / support our work / get in touch), all Events CTAs and wording on About, Contact, Gallery, Login and the Journey pillars, the root layout metadata wording, the two `revalidatePath("/events")` calls in the admin event actions, and the `/events` entries in `sitemap.xml`. `robots.txt` never referenced `/events`, so it needed no change.
+- **Kept on purpose (internal scheduling):** the `Event` model and its relations (`CollectionRequest.assignedEventId`, `CollectionRecord.eventId`, `Media.eventId`, `VolunteerRegistration`), the **Admin → Events manager**, the volunteers/attendance pages and the registrations CSV export. Collection scheduling and record linking are staff workflows that still rely on events; the homepage nav/footer simply no longer expose any of it publicly.
+- Verified: zero `/events` references remain anywhere in `app/`, `components/` or `lib/` outside the admin area; `/events` now returns a real 404; lint, `tsc --noEmit` and the production build pass.
 
 ## Final product polish, content & performance pass (25 Sept 2026)
 
@@ -12,8 +52,8 @@ Scope: codebase audit, a new **Foundation Journey** page, homepage/hero and page
 2. **Truthful content structure.** All narrative copy lives in `lib/journey.ts` (`JOURNEY_ERAS`, `JOURNEY_PILLARS`, `JOURNEY_TODAY`, `JOURNEY_NEXT`). Anything we cannot verify is written in `[square brackets]` with `source: "placeholder"`, which renders a visible **“Awaiting foundation input”** badge; the two unverifiable eras carry it today.
 3. **Founder note via the existing admin content system.** A new content category, `founder_note` ("Founder's story (Foundation Journey)"), is authored in **Admin → Awareness content** and appears automatically in the *From the Founder* card. It is filtered out of the awareness portal, `/awareness/<slug>`, the homepage article list and `sitemap.xml` (`AWARENESS_CATEGORIES` / `JOURNEY_CONTENT_CATEGORY` in `lib/domain.ts`). Verified: published note → visible on `/journey`, absent everywhere else, `/awareness/<slug>` → 404, not in the sitemap. The founder's story is never invented — the empty state says so explicitly.
 4. **Consistent animation system (CSS-first).** `Reveal` was rewritten as a progressive-enhancement IntersectionObserver component: content is **visible by default in the server HTML** (no JavaScript required), only below-the-fold elements are hidden after mount, and `prefers-reduced-motion` skips it entirely. Framer Motion was removed from `components/ui.tsx`, `public-header.tsx`, `page-transition.tsx`, `request-form.tsx`, `track-client.tsx` and `gallery-grid.tsx` — it is now used **only** in the admin shell. Reduced-motion handling was extended (hover transforms disabled, delays zeroed, reveal states forced visible).
-5. **Per-route loading skeletons.** `journey`, `initiatives`, `gallery`, `awareness`, `events` (list routes) plus `admin`, `admin/requests`, `admin/collections`, `admin/content`, `admin/gallery`, `admin/volunteers`, sharing `components/skeletons.tsx`.
-6. **SEO.** `metadataBase` + site-level Open Graph/Twitter defaults, a generated `opengraph-image` (text/shapes only, no invented logo), per-page canonical + OG metadata, dynamic `sitemap.xml` entries for published projects/events/articles (with a DB-outage fallback), `/login` added to `robots.txt` disallow and removed from the sitemap, and admin pages given their own title template.
+5. **Per-route loading skeletons.** `journey`, `initiatives`, `gallery`, `awareness` (list routes) plus `admin`, `admin/requests`, `admin/collections`, `admin/content`, `admin/gallery`, `admin/volunteers`, sharing `components/skeletons.tsx`.
+6. **SEO.** `metadataBase` + site-level Open Graph/Twitter defaults, a generated `opengraph-image` (text/shapes only, no invented logo), per-page canonical + OG metadata, dynamic `sitemap.xml` entries for published projects/articles (with a DB-outage fallback), `/login` added to `robots.txt` disallow and removed from the sitemap, and admin pages given their own title template.
 7. **Accessibility.** A "Skip to content" link, `Breadcrumbs` now uses `next/link` (client navigation, was a full page reload), `ConfirmDialog` gained Escape handling, a light-on-dark focus ring for the footer/dark panels, `[id]` scroll-margin so hash links clear the sticky header, and the toast close button is now a proper padded hit target.
 8. **Media.** New `components/media-image.tsx`: raster uploads go through `next/image` (responsive `sizes`, WebP, lazy) while the local SVG artwork stays a plain `<img>` (the optimizer refuses SVG by design). The gallery moved from a masonry column layout to a uniform 4:3 responsive grid — matching the shipped artwork exactly and removing all layout shift.
 9. **Shared skeleton/util de-duplication:** `PROJECT_CATEGORIES` / `PROJECT_CATEGORY_LABELS` / `PROJECT_STATUS_LABELS`, `AWARENESS_CATEGORIES`, `lib/site.ts`, `lib/schemas.ts`, `components/skeletons.tsx`, `components/media-image.tsx`.
@@ -38,7 +78,7 @@ Scope: codebase audit, a new **Foundation Journey** page, homepage/hero and page
 | `/admin/content` | 289 kB | **192 kB** |
 | `/admin/projects` | 289 kB | **192 kB** |
 | `/admin/requests/[id]` | 290 kB | **193 kB** |
-| Public content pages (`/`, `/about`, `/journey`, `/awareness`, `/events`, `/initiatives`) | 143 kB | 143 kB (shared) |
+| Public content pages (`/`, `/about`, `/journey`, `/awareness`, `/donate`, `/initiatives`) | 143 kB | 143 kB (shared) |
 
 Cause of the reductions: the zod split above, `next/dynamic` for the recharts dashboard chart (its own chunk, loaded after the page is interactive), and framer-motion no longer being part of the public shell. Other work: `select`-scoped Prisma queries (homepage projects/articles, initiatives list), `Promise.all` in the admin request detail (events + internal notes), and `priority` reserved for the header logo only.
 

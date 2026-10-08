@@ -110,8 +110,8 @@ pipeline is visible immediately; delete it in Admin → Collections if you want 
 
 ## Route map
 
-**Public** — `/` · `/about` · `/journey` · `/initiatives` · `/projects/[slug]` · `/events` ·
-`/events/[slug]` · `/awareness` · `/awareness/[slug]` · `/gallery` · `/contact` ·
+**Public** — `/` · `/about` · `/journey` · `/initiatives` · `/projects/[slug]` ·
+`/awareness` · `/awareness/[slug]` · `/gallery` · `/donate` · `/contact` ·
 `/request-collection` · `/track-request` · `/login`
 
 **Staff (auth required)** — `/admin` (dashboard) · `/admin/requests` (+detail) ·

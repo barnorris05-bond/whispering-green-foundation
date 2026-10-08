@@ -17,7 +17,7 @@ const outfit = Outfit({
 
 const DEFAULT_TITLE = "Whispering Green Foundation — Community waste action in Vasai-West";
 const DEFAULT_DESCRIPTION =
-  "Whispering Green Foundation coordinates community waste collection and awareness in Vasai-West. Request a household waste pickup, join clean-up events, and learn better waste habits.";
+  "Whispering Green Foundation coordinates community waste collection and awareness in Vasai-West. Request a household waste pickup and learn better waste habits.";
 
 export const metadata: Metadata = {
   metadataBase: METADATA_BASE,

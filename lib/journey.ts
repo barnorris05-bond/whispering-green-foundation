@@ -182,17 +182,17 @@ export const JOURNEY_PILLARS: JourneyPillar[] = [
   {
     icon: Users,
     title: "Community participation",
-    text: "Clean-up drives, segregation sessions and awareness walks that residents can simply turn up to and join.",
-    href: "/events",
-    cta: "Browse events",
+    text: "Clean-up drives, segregation sessions and awareness walks organised with residents and volunteers.",
+    href: "/contact",
+    cta: "Get in touch",
     live: true,
   },
   {
     icon: HeartHandshake,
     title: "Volunteer involvement",
-    text: "Volunteers register for an event in advance, so the team knows how many hands and how much material to plan for.",
-    href: "/events",
-    cta: "Register as a volunteer",
+    text: "Residents and volunteers who want to help can write to the foundation directly; the team coordinates hands and material before each drive.",
+    href: "/contact",
+    cta: "Get in touch",
     live: true,
   },
   {
@@ -247,7 +247,7 @@ export const JOURNEY_NEXT = {
   note: "We have deliberately not listed targets, dates, awards or partnerships on this page. When something is confirmed, it will be published here rather than promised in advance.",
   ctas: [
     { href: "/initiatives", label: "Explore our initiatives", variant: "primary" as const },
-    { href: "/events", label: "Get involved", variant: "secondary" as const },
+    { href: "/donate", label: "Support our work", variant: "secondary" as const },
     { href: "/request-collection", label: "Request a collection", variant: "ghost" as const },
   ],
 } as const;

@@ -1,15 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
-import { formatIN, formatDate } from "@/lib/format";
+import { formatIN } from "@/lib/format";
 import { CONTENT_CATEGORY_LABELS, JOURNEY_CONTENT_CATEGORY, PROJECT_CATEGORY_LABELS } from "@/lib/domain";
 import { absoluteUrl } from "@/lib/site";
 import { Reveal, SectionHeading, Badge, EmptyState } from "@/components/ui";
 import { LogoMark } from "@/components/logo";
 import { JOURNEY_ERAS } from "@/lib/journey";
 import {
-  Recycle, ClipboardList, Truck, PartyPopper, ArrowRight, CalendarDays,
-  BookOpen, Users, ShieldCheck, MapPin, Leaf, HandHeart, Info, PackageSearch, Compass,
+  Recycle, ClipboardList, Truck, PartyPopper, ArrowRight,
+  BookOpen, ShieldCheck, MapPin, Leaf, HandHeart, HeartHandshake, Info, PackageSearch, Compass,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -19,12 +19,12 @@ export const metadata: Metadata = {
   // would be appended twice on the homepage.
   title: { absolute: "Whispering Green Foundation — Community waste action in Vasai-West" },
   description:
-    "Request a household waste collection, join clean-up events, and learn practical waste habits with Whispering Green Foundation in Vasai-West.",
+    "Request a household waste collection and learn practical waste habits with Whispering Green Foundation in Vasai-West.",
   alternates: { canonical: absoluteUrl("/") },
   openGraph: {
     title: "Whispering Green Foundation — Community waste action in Vasai-West",
     description:
-      "Household waste collection, community clean-up events and practical awareness work in Vasai-West — with impact figures published only from verified records.",
+      "Household waste collection, community clean-up drives and practical awareness work in Vasai-West — with impact figures published only from verified records.",
     url: absoluteUrl("/"),
     type: "website",
   },
@@ -32,15 +32,10 @@ export const metadata: Metadata = {
 
 async function getHomeData() {
   try {
-    const [verified, events, articles, projects] = await Promise.all([
+    const [verified, articles, projects] = await Promise.all([
       prisma.collectionRecord.findMany({
         where: { verificationStatus: "verified" },
         select: { quantity: true, unit: true },
-      }),
-      prisma.event.findMany({
-        where: { status: "published", eventDate: { gte: new Date() } },
-        orderBy: { eventDate: "asc" },
-        take: 3,
       }),
       prisma.content.findMany({
         // Exclude the founder's Journey note — it is not awareness content.
@@ -57,9 +52,9 @@ async function getHomeData() {
         select: { id: true, slug: true, title: true, description: true, category: true, locality: true },
       }),
     ]);
-    return { verified, events, articles, projects, ok: true as const };
+    return { verified, articles, projects, ok: true as const };
   } catch {
-    return { verified: null, events: [], articles: [], projects: [], ok: false as const };
+    return { verified: null, articles: [], projects: [], ok: false as const };
   }
 }
 
@@ -87,7 +82,7 @@ const STEPS = [
 ];
 
 export default async function HomePage() {
-  const { verified, events, articles, projects, ok } = await getHomeData();
+  const { verified, articles, projects, ok } = await getHomeData();
 
   // Only kg records are summed into the public tonnage; non-kg units (bags/other)
   // still count as verified records but cannot be expressed in kilograms.
@@ -174,8 +169,8 @@ export default async function HomePage() {
                 <Link href="/track-request" className="chip-link">
                   <PackageSearch className="w-4 h-4 text-forest-600" /> Track my request
                 </Link>
-                <Link href="/events" className="chip-link">
-                  <Users className="w-4 h-4 text-forest-600" /> Volunteer at a drive
+                <Link href="/donate" className="chip-link">
+                  <HeartHandshake className="w-4 h-4 text-forest-600" /> Support our work
                 </Link>
                 <Link href="/awareness" className="chip-link">
                   <BookOpen className="w-4 h-4 text-forest-600" /> Learn waste habits
@@ -224,7 +219,7 @@ export default async function HomePage() {
               <dl className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-7">
                 <ImpactStat label="Waste collected (verified)" value={`${formatIN(totalKg)} kg`} />
                 <ImpactStat label="Verified collection records" value={formatIN(verified?.length ?? 0)} />
-                <ImpactStat label="Upcoming published events" value={String(events.length)} />
+                <ImpactStat label="Published initiatives" value={String(projects.length)} />
                 <ImpactStat label="Awareness articles" value={String(articles.length)} />
               </dl>
             )}
@@ -333,45 +328,6 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* ---------------------------------------------------------------- events */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-20 sm:mt-24">
-        <Reveal>
-          <div className="flex items-end justify-between gap-4 mb-10">
-            <SectionHeading eyebrow="Get involved" title="Upcoming events" />
-            <Link href="/events" className="btn btn-ghost btn-sm mb-2 hidden sm:inline-flex">
-              All events <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </Reveal>
-        {events.length === 0 ? (
-          <EmptyState
-            icon={<CalendarDays className="w-5 h-5" />}
-            title="No upcoming events right now"
-            hint="Follow this page — new clean-up drives and awareness sessions are announced here."
-            action={<Link href="/events" className="btn btn-secondary btn-sm">Browse past events</Link>}
-          />
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {events.map((e, i) => (
-              <Reveal key={e.id} delay={i * 0.07}>
-                <Link href={`/events/${e.slug}`} className="card card-hover block p-6 h-full group">
-                  <div className="flex items-center gap-2 text-xs text-forest-700 font-medium">
-                    <CalendarDays className="w-3.5 h-3.5" />
-                    {formatDate(e.eventDate)}
-                    {e.startTime && <span className="text-charcoal-soft/70">· {e.startTime}</span>}
-                  </div>
-                  <h3 className="font-display text-lg font-semibold text-charcoal mt-2.5 group-hover:text-forest-700 transition-colors">{e.title}</h3>
-                  <p className="text-sm text-charcoal-soft mt-1.5 line-clamp-2">{e.description}</p>
-                  <p className="flex items-center gap-1.5 text-xs text-charcoal-soft/75 mt-4">
-                    <MapPin className="w-3.5 h-3.5" /> {e.locality}
-                  </p>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        )}
-      </section>
-
       {/* ------------------------------------------------------------- awareness */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-20 sm:mt-24">
         <Reveal>
@@ -404,7 +360,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* ------------------------------------------------------------ volunteer CTA */}
+      {/* -------------------------------------------------------- get involved CTA */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-20 sm:mt-24">
         <Reveal>
           <div className="relative overflow-hidden rounded-[1.6rem] bg-forest-900 text-forest-50 px-8 py-14 sm:px-14 text-center">
@@ -413,15 +369,18 @@ export default async function HomePage() {
             </div>
             <LogoMark className="w-16 h-16 mx-auto rounded-2xl bg-white/95 p-1.5 shadow-soft" />
             <h2 className="font-display text-3xl sm:text-4xl font-semibold mt-5 tracking-tight">
-              Volunteer with us in Vasai-West
+              Get involved in Vasai-West
             </h2>
             <p className="text-forest-100/85 mt-4 max-w-xl mx-auto leading-relaxed">
-              Join weekend clean-up drives, help with door-to-door awareness, or assist at collection points.
-              Register for an upcoming event — no prior experience needed.
+              Book a doorstep collection for your household, support the work behind every verified kilogram, or
+              simply get in touch — residents and volunteers are always welcome to reach out.
             </p>
             <div className="flex flex-wrap justify-center gap-3 mt-8">
-              <Link href="/events" className="btn btn-leaf btn-lg">
-                <Users className="w-5 h-5" /> See upcoming events
+              <Link href="/request-collection" className="btn btn-leaf btn-lg">
+                <HandHeart className="w-5 h-5" /> Request a collection
+              </Link>
+              <Link href="/donate" className="btn btn-ghost btn-lg text-forest-50 hover:bg-white/10">
+                <HeartHandshake className="w-5 h-5" /> Support our work
               </Link>
               <Link href="/contact" className="btn btn-ghost btn-lg text-forest-50 hover:bg-white/10">
                 Get in touch

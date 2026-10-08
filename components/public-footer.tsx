@@ -8,7 +8,6 @@ const EXPLORE_LINKS: Array<[string, string]> = [
   ["/about", "About us"],
   ["/journey", "Foundation Journey"],
   ["/initiatives", "Initiatives & projects"],
-  ["/events", "Events"],
   ["/awareness", "Awareness portal"],
   ["/gallery", "Gallery"],
 ];
@@ -17,7 +16,6 @@ const TAKE_PART_LINKS: Array<[string, string]> = [
   ["/donate", "Donate"],
   ["/request-collection", "Request collection"],
   ["/track-request", "Track a request"],
-  ["/events", "Volunteer with us"],
   ["/contact", "Contact us"],
 ];
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, X, HandHeart, Leaf, CalendarDays } from "lucide-react";
+import { Menu, X, HandHeart, Leaf, PackageSearch } from "lucide-react";
 import { Logo } from "./logo";
 import { cn } from "@/lib/format";
 
@@ -19,7 +19,6 @@ export const PUBLIC_NAV = [
   { href: "/about", label: "About" },
   { href: "/journey", label: "Our Journey" },
   { href: "/initiatives", label: "Initiatives" },
-  { href: "/events", label: "Events" },
   { href: "/awareness", label: "Awareness" },
   { href: "/gallery", label: "Gallery" },
   { href: "/contact", label: "Contact" },
@@ -77,11 +76,11 @@ export function PublicHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link href="/request-collection" className="btn btn-primary btn-sm hidden sm:inline-flex">
+            <Link href="/request-collection" className="btn btn-primary btn-sm sm:!inline-flex !hidden">
               <HandHeart className="w-4 h-4" /> Request collection
             </Link>
             <button
-              className="lg:hidden btn btn-ghost btn-sm px-2.5"
+              className="lg:!hidden btn btn-ghost btn-sm px-2.5"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
               aria-controls="mobile-nav"
@@ -97,7 +96,7 @@ export function PublicHeader() {
         <nav
           id="mobile-nav"
           aria-label="Mobile"
-          className="lg:hidden border-t border-forest-100 bg-ivory/95 backdrop-blur-md animate-drop-in origin-top"
+          className="lg:!hidden border-t border-forest-100 bg-ivory/95 backdrop-blur-md animate-drop-in origin-top"
         >
           <div className="px-4 py-4 flex flex-col gap-1">
             {PUBLIC_NAV.map((item, i) => (
@@ -119,7 +118,7 @@ export function PublicHeader() {
             ))}
             <div className="grid grid-cols-2 gap-2 mt-3">
               <Link href="/request-collection" className="btn btn-primary btn-sm"><Leaf className="w-4 h-4" /> Request</Link>
-              <Link href="/events" className="btn btn-secondary btn-sm"><CalendarDays className="w-4 h-4" /> Events</Link>
+              <Link href="/track-request" className="btn btn-secondary btn-sm"><PackageSearch className="w-4 h-4" /> Track</Link>
             </div>
           </div>
         </nav>

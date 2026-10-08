@@ -40,9 +40,9 @@ const WHAT_WE_DO = [
   {
     icon: Users,
     title: "Bring people together",
-    text: "Clean-up drives, segregation sessions and awareness walks that residents and volunteers can join in person.",
-    href: "/events",
-    cta: "See upcoming events",
+    text: "Clean-up drives, segregation sessions and awareness walks organised with residents and volunteers.",
+    href: "/contact",
+    cta: "Get in touch",
   },
 ];
 
@@ -107,8 +107,8 @@ export default function AboutPage() {
             <h2 className="font-display text-2xl font-semibold text-charcoal">Our mission</h2>
             <p className="prose-eco mt-4 text-[0.95rem]">
               To make responsible waste disposal easy and visible for every household in Vasai-West — through
-              doorstep collection requests, community events, and honest, verified reporting of what we collect
-              together.
+              doorstep collection requests, community clean-up drives, and honest, verified reporting of what we
+              collect together.
             </p>
           </div>
         </Reveal>
@@ -277,7 +277,7 @@ export default function AboutPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-3 mt-6">
             <Link href="/request-collection" className="btn btn-leaf">Request a collection</Link>
-            <Link href="/events" className="btn btn-ghost text-forest-50 hover:bg-white/10">Join an event</Link>
+            <Link href="/donate" className="btn btn-ghost text-forest-50 hover:bg-white/10">Support our work</Link>
           </div>
         </div>
       </Reveal>

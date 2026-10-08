@@ -9,11 +9,11 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Gallery",
-  description: "Photos from Whispering Green Foundation events and collection drives.",
+  description: "Photos from Whispering Green Foundation collection drives and community work.",
   alternates: { canonical: absoluteUrl("/gallery") },
   openGraph: {
     title: "Gallery · Whispering Green Foundation",
-    description: "Moments from community drives and events across Vasai-West.",
+    description: "Moments from community collection drives across Vasai-West.",
     url: absoluteUrl("/gallery"),
     type: "website",
   },
@@ -32,7 +32,7 @@ export default async function GalleryPage() {
         <SectionHeading
           eyebrow="Community"
           title="Gallery"
-          sub="Moments from our drives and events. Only approved media is published."
+          sub="Moments from our collection drives and community work. Only approved media is published."
         />
       </Reveal>
 

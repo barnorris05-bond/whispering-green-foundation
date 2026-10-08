@@ -260,7 +260,6 @@ export async function setEventStatus(_prev: ActionState, formData: FormData): Pr
   const ev = await prisma.event.update({ where: { id }, data: { status } });
   await audit(user, AUDIT_ACTIONS.eventStatusChanged, "event", id, { status });
   revalidatePath("/admin/events");
-  revalidatePath("/events");
   return { ok: true, message: `Event "${ev.title}" → ${status}.` };
 }
 
@@ -274,7 +273,6 @@ export async function deleteEvent(_prev: ActionState, formData: FormData): Promi
     return { ok: false, error: "Cannot delete: registrations or records reference this event." };
   }
   revalidatePath("/admin/events");
-  revalidatePath("/events");
   return { ok: true, message: "Event deleted." };
 }
 

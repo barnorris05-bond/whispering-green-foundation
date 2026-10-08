@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: { canonical: absoluteUrl("/contact") },
   openGraph: {
     title: "Contact · Whispering Green Foundation",
-    description: "Questions about collections, events or partnerships — send the foundation a message.",
+    description: "Questions about collections, volunteering or partnerships — send the foundation a message.",
     url: absoluteUrl("/contact"),
     type: "website",
   },
@@ -23,7 +23,7 @@ export default function ContactPage() {
         <SectionHeading
           eyebrow="Talk to us"
           title="Contact the foundation"
-          sub="Questions about collections, events or partnerships for the demo — send us a message and staff will see it in the admin dashboard."
+          sub="Questions about collections, volunteering or partnerships for the demo — send us a message and staff will see it in the admin dashboard."
         />
       </Reveal>
 

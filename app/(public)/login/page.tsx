@@ -22,7 +22,7 @@ export default function LoginPage() {
           </div>
           <h1 className="font-display text-3xl font-semibold text-forest-950 tracking-tight">Staff sign-in</h1>
           <p className="text-sm text-charcoal-soft mt-2.5 mb-8">
-            For foundation staff and volunteers coordinating collections and events.
+            For foundation staff coordinating household collections and awareness work.
           </p>
           <Suspense fallback={<div className="skeleton h-72 rounded-2xl" />}>
             <LoginForm />
