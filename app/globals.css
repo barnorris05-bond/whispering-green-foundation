@@ -180,6 +180,14 @@ body {
   @apply bg-white border border-sage-200 rounded-[var(--radius-card)] shadow-soft;
 }
 
+/* Dark CTA card. Declared after `.card` on purpose: `.card` is unlayered CSS,
+   which outranks a `bg-*` utility applied as a Tailwind class, so a dark
+   background has to come from an unlayered rule of its own — `bg-forest-900`
+   alone would silently render white and leave the light text unreadable. */
+.card-dark {
+  @apply bg-forest-900 border-forest-900 text-forest-50;
+}
+
 .card-hover {
   @apply transition-all duration-300;
 }
@@ -221,6 +229,13 @@ body {
 
 .btn-ghost {
   @apply text-forest-800 hover:bg-forest-50;
+}
+
+/* Ghost button on a dark surface. Needed as a class rather than a `text-forest-50`
+   utility because `.btn-ghost` is unlayered and would otherwise win, painting dark
+   green text on a dark green background. */
+.btn-ghost-light {
+  @apply text-forest-50 hover:bg-white/10;
 }
 
 .btn-sm { min-height: 2.15rem; padding: 0 0.9rem; font-size: 0.83rem; }

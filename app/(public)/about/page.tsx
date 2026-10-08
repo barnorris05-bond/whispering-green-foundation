@@ -269,7 +269,7 @@ export default function AboutPage() {
 
       {/* ------------------------------------------------------------- final CTA */}
       <Reveal>
-        <div className="card p-8 mt-14 text-center bg-forest-900 text-forest-50 border-forest-900">
+        <div className="card card-dark p-8 mt-14 text-center">
           <Leaf className="w-8 h-8 text-leaf-300 mx-auto" />
           <h2 className="font-display text-2xl font-semibold mt-4">Ready to take part?</h2>
           <p className="text-forest-100/85 text-sm mt-2 max-w-lg mx-auto">
@@ -277,7 +277,7 @@ export default function AboutPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-3 mt-6">
             <Link href="/request-collection" className="btn btn-leaf">Request a collection</Link>
-            <Link href="/donate" className="btn btn-ghost text-forest-50 hover:bg-white/10">Support our work</Link>
+            <Link href="/donate" className="btn btn-ghost btn-ghost-light">Support our work</Link>
           </div>
         </div>
       </Reveal>
